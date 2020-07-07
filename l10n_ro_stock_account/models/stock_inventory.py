@@ -107,24 +107,22 @@ class StockInventoryLine(models.Model):
         # Overwrite to allow multiple lines in inventory for
         # products but with different price
         for line in self:
-            if line.price_unit and line.price_unit > 0:
-                domain = [
-                    ('id', '!=', line.id),
-                    ('price_unit', '=', line.price_unit),
-                    ('product_id', '=', line.product_id.id),
-                    ('location_id', '=', line.location_id.id),
-                    ('partner_id', '=', line.partner_id.id),
-                    ('package_id', '=', line.package_id.id),
-                    ('prod_lot_id', '=', line.prod_lot_id.id),
-                    ('inventory_id', '=', line.inventory_id.id)]
-                existings = self.search_count(domain)
-                if existings:
-                    raise UserError(
-                        _("There is already one inventory adjustment line "
-                          "for this product, you should rather modify this "
-                          "one instead of creating a new one."))
-            else:
-                super(StockInventoryLine, self)._check_no_duplicate_line()
+            domain = [
+                ('id', '!=', line.id),
+                ('inventory_date', '=', line.inventory_date),
+                ('price_unit', '=', line.price_unit),
+                ('product_id', '=', line.product_id.id),
+                ('location_id', '=', line.location_id.id),
+                ('partner_id', '=', line.partner_id.id),
+                ('package_id', '=', line.package_id.id),
+                ('prod_lot_id', '=', line.prod_lot_id.id),
+                ('inventory_id', '=', line.inventory_id.id)]
+            existings = self.search_count(domain)
+            if existings:
+                raise UserError(
+                    _("There is already one inventory adjustment line "
+                      "for this product, you should rather modify this "
+                      "one instead of creating a new one."))
 
     @api.onchange('product_id', 'location_id', 'product_uom_id', 'prod_lot_id', 'partner_id', 'package_id',
                   'price_unit')
