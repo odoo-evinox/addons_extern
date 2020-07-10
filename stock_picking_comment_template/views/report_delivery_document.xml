@@ -8,7 +8,7 @@
                 <span t-raw="o.get_comment_template('before_lines', o.company_id.id, o.partner_id and o.partner_id.id or False)"/>
             </p>
         </xpath>
-        <xpath expr="(//p)[position()=last()]" position="after">
+        <xpath expr="//div[@class='page']" position="inside">
             <p t-if="o.get_comment_template('after_lines', o.company_id.id, o.partner_id and o.partner_id.id or False)">
                 <span t-raw="o.get_comment_template('after_lines', o.company_id.id, o.partner_id and o.partner_id.id or False)"/>
             </p>
