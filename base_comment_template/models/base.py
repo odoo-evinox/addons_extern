@@ -43,5 +43,5 @@ class Base(models.AbstractModel):
         if not template:
             return False
         return self.env["mail.template"]._render_template(
-            template.text, self._name, self.id, post_process=True
+            template.text, self._name, self._ids, post_process=True
         )
