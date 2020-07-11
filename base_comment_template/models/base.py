@@ -40,8 +40,12 @@ class Base(models.AbstractModel):
                 if self in self.search(safe_eval(templ.domain or "[]")):
                     template = templ
                     break
+# original for v13 in v14 like down
+#         if not template:
+#             return False
+#         return self.env["mail.template"]._render_template(
+#             template.text, self._name, self._ids, post_process=True
+#         )
         if not template:
-            return False
-        return self.env["mail.template"]._render_template(
-            template.text, self._name, self._ids, post_process=True
-        )
+            return ''
+        return next(iter(self.env["mail.template"]._render_template(template.text, self._name, self._ids, post_process=True).values()))
