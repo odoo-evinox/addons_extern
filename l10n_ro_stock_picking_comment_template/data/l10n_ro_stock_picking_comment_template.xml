@@ -2,6 +2,7 @@
 <!-- # Copyright 2020 NextERP Romania SRL
      # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl). -->
 <odoo>
+    <!--               out  stock sale                -->
     <record id="l10n_ro_picking_out_down" model="base.comment.template">
         <field name="name">Romania - Comment for Delivery After Lines</field>
         <field name="position">after_lines</field>
@@ -35,18 +36,19 @@
                             <span>Name:  ${user.name}</span>
                         </td>
                         <td>
-                            <div><span>Delegate: .....................................................................</span><br/></div>
-                            <div><span>B.I./C.I.: ........................................................................</span><br/></div>
-                            <div><span>Mean Transport: .......................................................</span><br/></div>
-                            <div><span>Date: ................................. Hour: ..............................</span><br/></div>
+                            <div><span>Delegate: ${object.delegate_id.name if object.delegate_id else '.'*100 }</span><br/></div>
+                            <div><span>B.I./C.I.: ${'.'*100}</span><br/></div>
+                            <div><span>Mean Transport:  ${object.mean_transp or "."*50}</span><br/></div>
+                            <div><span>Date: ${'.'*40} Hour: ${'.'*20}</span><br/></div>
                         </td>
-                        <td>
-                        </td>
+                        <td> </td>
                     </tr>
                 </tbody>
             </table>]]>
         </field>
     </record>
+    
+    <!--               received stock        purchase         -->
     <record id="l10n_ro_picking_in_up" model="base.comment.template">
         <field name="name">Romania - Comment for Reception Before Lines</field>
         <field name="position">before_lines</field>
@@ -64,8 +66,8 @@
             <p>
                 <span>RECEPTION NOTE AND DIFFERENCES</span>
             </p>
-            <span>The undersigned, members of the reception commission, I received the material values provided by: ${object.partner_id.name}, delegate: ................................................,
-                car no.: ................................, based on the accompanying documents: ${object.purchase_id.partner_ref or (object.purchase_id.invoice_ids and (object.purchase_id.invoice_ids[0].ref or object.purchase_id.invoice_ids[0].name) or '...............................................')  or '...............................................'}, noting:
+            <span>The undersigned, members of the reception commission, I received the material values provided by: ${object.partner_id.name}, delegate: ${object.delegate_id.name if object.delegate_id else '.'*60 },
+                car no.: ${object.mean_transp or "."*32}, based on the accompanying documents: ${object.purchase_id.partner_ref or (object.purchase_id.invoice_ids and (object.purchase_id.invoice_ids[0].ref or object.purchase_id.invoice_ids[0].name) or '.'*47)  or '.'*47}, noting:
             </span>]]>
         </field>
     </record>
@@ -112,7 +114,7 @@
                         </td>
                         <td>
                             <p>
-                                <br/><br/><br/>
+                                <br/><br/><br/>  
                             </p>
                         </td>
                     </tr>
