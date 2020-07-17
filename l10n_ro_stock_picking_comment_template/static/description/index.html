@@ -86,7 +86,10 @@
         <div class="oe_span6">
             <p class="oe_mt32">
                 <ul>
-                    <li>...</li>
+                    <li> if the model stock_picking_repot_valued is is installed after this module will not work as intended
+					</li><li> in this module we overwrite the field valued = fields.Boolean(related="partner_id.valued_picking", readonly=True) not to be partner related
+					</li><li> we didn't put dependency on this module because that module is dependent on stock_account that is maybe not used
+					</li>
                 </ul>
             </p>
         </div>

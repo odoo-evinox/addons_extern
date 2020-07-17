@@ -3,6 +3,12 @@
 {
     "name": "Romania - Stock Picking Comment Template",
     "category": "Localization",
+    "description":"""
+# if the model stock_picking_repot_valued is is installed after this module will not work as intended
+# in this module we overwrite the field valued = fields.Boolean(related="partner_id.valued_picking", readonly=True) not to be partner related
+# we didn't put dependency on this module because that module is dependent on stock_account that is maybe not used
+    
+    """,
     "depends": ["stock", 
                 "purchase_stock", 
                 "stock_picking_comment_template",
