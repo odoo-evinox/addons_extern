@@ -5,7 +5,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from odoo import fields, models
-
+from odoo.exceptions import ValidationError
 
 class StockMoveLine(models.Model):
     _inherit = "stock.move.line"
@@ -77,3 +77,32 @@ class StockMoveLine(models.Model):
                     "sale_price_total": taxes["total_included"],
                 }
             )
+    
+    def _get_aggregated_product_quantities(self, **kwargs):
+        "giving also the sale_price needed for showing in report"
+        aggregated_move_lines = super()._get_aggregated_product_quantities(**kwargs)
+        for move_line in self:
+            name = move_line.product_id.display_name
+            description = move_line.move_id.description_picking
+            if description == name or description == move_line.product_id.name:
+                description = False
+            uom = move_line.product_uom_id
+            line_key = str(move_line.product_id.id) + "_" + name + (description or "") + "uom " + str(uom.id)
+
+            if line_key not in aggregated_move_lines:
+                raise ValidationError(f"some error line_key={line_key}")
+            else:
+                if 'sale_price_unit' not in aggregated_move_lines[line_key]: 
+                    aggregated_move_lines[line_key]['sale_price_unit'] = move_line.sale_price_unit
+                    aggregated_move_lines[line_key]['sale_tax_description'] = move_line.sale_tax_description
+                    aggregated_move_lines[line_key]['sale_price_subtotal'] = move_line.sale_price_subtotal
+                    aggregated_move_lines[line_key]['sale_discount'] = move_line.sale_discount
+                    aggregated_move_lines[line_key]['sale_price_tax'] = move_line.sale_price_tax
+                else:
+                    aggregated_move_lines[line_key]['sale_price_subtotal'] += move_line.sale_price_subtotal
+                    aggregated_move_lines[line_key]['sale_discount'] += move_line.sale_discount
+                    aggregated_move_lines[line_key]['sale_price_tax'] += move_line.sale_price_tax
+                
+        return aggregated_move_lines
+
+        

@@ -12,21 +12,21 @@ from odoo.exceptions import ValidationError
 class StockMoveLine(models.Model):
     _inherit = "stock.move.line"
 
-    purchase_line = fields.Many2one(related="move_id.purchase_line_id",  string="Related order line")
+    purchase_line = fields.Many2one(related="move_id.purchase_line_id",  string="Related purchase line")
     purchase_currency_id = fields.Many2one(related="purchase_line.currency_id",  string="Purchase Currency")
     purchase_tax_id = fields.Many2many(related="purchase_line.taxes_id",  string="Purchase Tax")
     purchase_price_unit = fields.Float(related="purchase_line.price_unit",  string="Purchase price unit")
     purchase_tax_description = fields.Char(
         compute="_compute_purchase_order_line_fields",
-        string="Tax Description", compute_sudo=True,  # See explanation for sudo in compute method
+        string="Purchase Tax Description", compute_sudo=True,  # See explanation for sudo in compute method
     )
     purchase_price_subtotal = fields.Monetary(
         compute="_compute_purchase_order_line_fields",
-        string="Price subtotal", compute_sudo=True,)
+        string="Purchase Price subtotal", compute_sudo=True,)
     purchase_price_tax = fields.Float(
-        compute="_compute_purchase_order_line_fields", string="Taxes", compute_sudo=True)
+        compute="_compute_purchase_order_line_fields", string="Purchase Taxes", compute_sudo=True)
     purchase_price_total = fields.Monetary(
-        compute="_compute_purchase_order_line_fields", string="Total", compute_sudo=True)
+        compute="_compute_purchase_order_line_fields", string="Purchase Total", compute_sudo=True)
 
     def _compute_purchase_order_line_fields(self):
         """This is computed with sudo for avoiding problems if you don't have

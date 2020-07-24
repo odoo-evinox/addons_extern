@@ -11,7 +11,7 @@ class StockPickingForPurchase(models.Model):
     _inherit = "stock.picking"
 
     purchase_id = fields.Many2one('purchase.order',readonly=1,string="Created by this purchase")  # or lile om sa;e tp be related to procurmet group? 
-    purchase_currency_id = fields.Many2one(related="purchase_id.currency_id", readonly=1, string="Currency",related_sudo=True,  )
+    purchase_currency_id = fields.Many2one(related="purchase_id.currency_id", readonly=1, string="Purchase Currency", related_sudo=True,  )
 
     def _compute_amount_all(self):
         """overwrite of function from stock_picking to take into account also the purchase
