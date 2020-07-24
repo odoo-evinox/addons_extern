@@ -15,6 +15,7 @@
         "data/report_data.xml",
         "reports/stock_card_report.xml",
         "wizard/stock_card_report_wizard_view.xml",
+        "security/ir.model.access.csv",
     ],
     "installable": True,
 }
