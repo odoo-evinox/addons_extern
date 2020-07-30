@@ -23,7 +23,7 @@ class StockMoveLine(models.Model):
         for line in self:
             margin = 0
             sale_with_margin_price_total = 0
-            if 'purchase_price_unit' in  self.fields and 'purchase_line' in  self.fields:
+            if 'purchase_price_unit' in  self._fields and 'purchase_line' in  self._fields:
                 # means that the stock_picking report is installed
                 super()._compute_purchase_order_line_fields() # the before behavior 
                 margin = (line.list_price - line.purchase_price_unit)/100
