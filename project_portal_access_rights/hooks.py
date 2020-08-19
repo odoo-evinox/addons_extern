@@ -17,13 +17,13 @@ def post_init_hook(cr, registry):
                 ('message_partner_ids', 'child_of', [user.partner_id.commercial_partner_id.id]),
         ]"""
         task_rule = env.ref("project.project_task_rule_portal")
-        task_rule.domain = new_task_domain
+        task_rule.domain_force = new_task_domain
 
         new_project_domain = """[
                 ('message_partner_ids', 'child_of', [user.partner_id.commercial_partner_id.id]),
         ]"""
         project_rule = env.ref("project.project_project_rule_portal")
-        project_rule.domain = new_project_domain
+        project_rule.domain_force = new_project_domain
 
 
 def uninstall_hook(cr, registry):
@@ -43,11 +43,11 @@ def uninstall_hook(cr, registry):
                     ('message_partner_ids', 'child_of', [user.partner_id.commercial_partner_id.id]),
             ]"""
         task_rule = env.ref("project.project_task_rule_portal")
-        task_rule.domain = old_task_domain
+        task_rule.domain_force = old_task_domain
         old_project_domain = """[
                 '&',
                     ('privacy_visibility', '=', 'portal'),
                     ('message_partner_ids', 'child_of', [user.partner_id.commercial_partner_id.id]),
             ]"""
         project_rule = env.ref("project.project_project_rule_portal")
-        project_rule.domain = old_project_domain
+        project_rule.domain_force = old_project_domain
