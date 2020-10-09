@@ -1,0 +1,38 @@
+<odoo>
+	<report id="print_report_pdf"
+	        	string="Invoice Lines Wizard Report"
+	        	model="invoice.lines.wizard"
+	        	report_type="qweb-pdf"
+	        	name="invoice_lines_report_period.internal_layout"
+	        	file="model_invoice_lines_wizard.pdf"
+	        	menu="False"/>
+
+	<report id="print_report_html"
+	        	string="Invoice Lines Wizard Report"
+	        	model="invoice.lines.wizard"
+	        	report_type="qweb-html"
+	        	name="invoice_lines_report_period.ceva_html_template"
+	        	file="invoice_lines_report_period.model_invoice_lines_wizard.html"
+	        	menu="False"/>
+
+	<report id="print_report_xlsx"
+	        	string="Invoice Lines Wizard Report"
+	        	model="invoice.lines.wizard"
+	        	report_type="xlsx"
+	        	name="invoice_lines_report_period.model_invoice_lines_wizard_xlxs"
+	        	file="model_invoice_lines_wizard.xlsx"
+	        	menu="False"/>
+
+
+    <template id="ceva_html_template">
+    ceva raport html
+    <span t-esc="date_from"></span> 
+        <t t-foreach="lines" t-as="l">
+        	<p t-esc="l.name"></p>
+		
+		</t>    
+    </template> 
+
+
+
+</odoo>
