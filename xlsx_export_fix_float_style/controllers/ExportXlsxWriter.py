@@ -24,7 +24,6 @@ class ExcelExport2(ExcelExport):
     @http.route('/web/export/xlsx', type='http', auth="user")
     @serialize_exception
     def index(self, data, token):
-        a=3
         return self.base(data, token)
 
     def from_group_data(self, fields, groups):
@@ -73,13 +72,13 @@ class ExportXlsxWriter2(ExportXlsxWriter):
             format = { 'num_format': '0'}
         elif isinstance(cell_value, float):
             # all floats with just 2 decimals
-            #format = { 'num_format': '0.00'}
-            # with same number of decimals as original but max 3
-            if '.' in str(cell_value):
-                decimal_paces = len(str(cell_value).split('.')[1])
-            else:
-                decimal_paces = 1
-            format = { 'num_format': '0.'+'0' * min(decimal_paces,3)}
+            format = { 'num_format': '0.00'} # asked by client
+# with same number of decimals as original but max 3 # this is more general do not delete  
+#             if '.' in str(cell_value):
+#                 decimal_paces = len(str(cell_value).split('.')[1])
+#             else:
+#                 decimal_paces = 1
+#             format = { 'num_format': '0.'+'0' * min(decimal_paces,3)}
         elif isinstance(cell_value, datetime.datetime):
             format = {'text_wrap': True, 'num_format': 'yyyy-mm-dd hh:mm:ss'}
         elif isinstance(cell_value, datetime.date):
