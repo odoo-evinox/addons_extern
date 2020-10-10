@@ -1,11 +1,4 @@
 <odoo>
-	<report id="print_report_pdf"
-	        	string="Invoice Lines Wizard Report"
-	        	model="invoice.lines.wizard"
-	        	report_type="qweb-pdf"
-	        	name="invoice_lines_report_period.internal_layout"
-	        	file="model_invoice_lines_wizard.pdf"
-	        	menu="False"/>
 
 	<report id="print_report_html"
 	        	string="Invoice Lines Wizard Report"
@@ -26,8 +19,9 @@
 
 
      <template id="invoice_lines_html_report">
+     		<t t-call="web.html_container">
                     <h2>
-                        Raport <span t-esc="date_from"/><![CDATA[&nbsp;]]><![CDATA[&nbsp;]]>-<![CDATA[&nbsp;]]><![CDATA[&nbsp;]]><span t-esc="date_to"/> 
+                        Report <span t-esc="date_from"/><![CDATA[&nbsp;]]><![CDATA[&nbsp;]]>-<![CDATA[&nbsp;]]><![CDATA[&nbsp;]]><span t-esc="date_to"/> 
                     </h2>
 <!--                     <div t-if="product_ids!='[]'" class="row mt32 mb32">
                         <div class="col-auto" name="div_origin">
@@ -62,14 +56,17 @@
                                 <td> <span t-field="l.partner_id"/> </td>
                                 <td> <span t-field="l.move_id.invoice_date"/> </td>
                                 <td> <span t-field="l.move_id.name"/> </td>
-                                <td> <span t-field="l.price_unit"/> </td> <!-- or credit? but is in  company currency-->
-                                <td> <span t-field="l.currency_id"/> </td>
+                                <td> <span t-field="l.price_unit"/> </td> <!-- must be also the dicount?-->
+                                <td> <t t-if="l.currency_id"><span t-field="l.currency_id"/> </t>
+                                	 <t t-if="not l.currency_id"><span t-field="l.company_id.currency_id"/> </t>
+                                </td>
                                 <td> <span t-field="l.quantity"/> </td>
                                 <td> <span t-field="l.price_subtotal"/> </td>
                                 <td> <span t-field="l.tax_base_amount"/> </td> 
                             </tr>
                         </tbody>
                     </table>
+              </t>
 
     </template>
 
