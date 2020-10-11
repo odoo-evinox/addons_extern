@@ -5,15 +5,15 @@
 	        	model="invoice.lines.wizard"
 	        	report_type="qweb-html"
 	        	name="invoice_lines_report_period.invoice_lines_html_report"
-	        	file="invoice_lines_report_period.model_invoice_lines_wizard.html"
+	        	file="invoice_lines.html"
 	        	menu="False"/>
 
 	<report id="print_report_xlsx"
 	        	string="Invoice Lines Wizard Report"
 	        	model="invoice.lines.wizard"
 	        	report_type="xlsx"
-	        	name="invoice_lines_report_period.model_invoice_lines_wizard_xlxs"
-	        	file="model_invoice_lines_wizard.xlsx"
+	        	name="invoice_lines_report_period.invoice_lines_xlxs"
+	        	file="invoice_lines.xlsx"
 	        	menu="False"/>
 
 
@@ -45,7 +45,7 @@
                             </tr>
                         </thead>
                         <tbody>
-		   				    <t t-set="counter" t-value="-1"/>
+		   				    <t t-set="counter" t-value="0"/>
                             <tr t-foreach="lines" t-as="l">
                             	<t  t-set="counter" t-value="counter + 1"/>
                                 <td>  <span t-esc="counter"/></td>

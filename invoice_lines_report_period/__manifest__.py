@@ -9,6 +9,7 @@
     "depends": [
         "account",
         "date_range",
+        "report_xlsx_helper",
     ],
     "license": "AGPL-3",
     "data": [

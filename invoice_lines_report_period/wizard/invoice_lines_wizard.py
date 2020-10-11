@@ -36,11 +36,6 @@ class InvoiceLinesWizard(models.TransientModel):
         data = self._prepare_invoice_lines_report()
         return self.env.ref('invoice_lines_report_period.print_report_html').report_action(self, data=data)
 
-    def button_export_pdf(self):
-        self.ensure_one()
-        data = self._prepare_invoice_lines_report()
-        return self.env.ref('invoice_lines_report_period.print_report_pdf').report_action(self, data=data)
- 
     def button_export_xlsx(self):
         self.ensure_one()
         data = self._prepare_invoice_lines_report()
