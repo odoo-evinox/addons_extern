@@ -23,13 +23,11 @@
                     <h2>
                         Report <span t-esc="date_from"/><![CDATA[&nbsp;]]><![CDATA[&nbsp;]]>-<![CDATA[&nbsp;]]><![CDATA[&nbsp;]]><span t-esc="date_to"/> 
                     </h2>
-<!--                     <div t-if="product_ids!='[]'" class="row mt32 mb32">
+                     <div t-if="filters" class="row mt32 mb32">
                         <div class="col-auto" name="div_origin">
-                            <strong>Filterd only products:</strong>
-                            <p t-esc="product_ids"/>
+                            <p t-esc="filters"/>
                         </div>
                     </div>
- -->
                       <table class="table table-sm"  name="stock_move_table">
                         <thead>
                             <tr>
