@@ -7,14 +7,14 @@ class ReportStockCardReportXlsx(models.AbstractModel):
     _inherit = "report.report_xlsx.abstract"
 
     def generate_xlsx_report(self, workbook, data, objects):
-        filter, account_move_lines = function_to_return_filters_and_invoice_lines(self,data)
+        filters, account_move_lines = function_to_return_filters_and_invoice_lines(self,data)
         self._define_formats(workbook)
         sheet = workbook.add_worksheet(f'{data["date_from"]} {data["date_to"]}')
         row = 0
         sheet.write(row, 0, f'Report:{data["date_from"]} {data["date_to"]}', self.format_left_bold)
         row += 1
-        if filter:
-            sheet.write(row, 0, f'Report:{data["date_from"]} {data["date_to"]}', self.format_left_bold)
+        if filters:
+            sheet.write(row, 0, f'{filters}', self.format_left_bold)
             row += 1
         row +=1
         # I can take from xml table the format .. but I'm replicating it here
@@ -30,7 +30,12 @@ class ReportStockCardReportXlsx(models.AbstractModel):
                 currency = l.currency_id.name
             else:
                 currency = l.company_id.currency_id.name
-            for cell in [counter, l.product_id.name, l.product_id.default_code, l.partner_id.name, l.move_id.invoice_date, l.move_id.name, l.price_unit, currency, l.quantity, l.price_subtotal, l.tax_base_amount]: 
+            for cell in [counter, l.product_id.name, l.product_id.default_code, l.partner_id.name, l.move_id.invoice_date, l.move_id.name, 
+                         round(l.price_subtotal/l.quantity,2), #<!-- not price unit because we are taking into account also the discount-->
+                         currency, 
+                         l.quantity, 
+                         round(l.price_subtotal, 2), 
+                         round(l.price_total-l.price_subtotal,2)]: 
                 sheet.write(row, col, cell)
                 col +=1 
             counter += 1

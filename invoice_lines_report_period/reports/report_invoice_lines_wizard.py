@@ -29,6 +29,7 @@ def function_to_return_filters_and_invoice_lines(self,data):
 
 class ReportInvoiceLinesWizardGiveMoveLines(models.AbstractModel):
     _name = 'report.invoice_lines_report_period.invoice_lines_html_report'
+    _description = "a class just to give to wizard also the account_move_lines"
 
     @api.model
     def _get_report_values(self, docids, data=None):

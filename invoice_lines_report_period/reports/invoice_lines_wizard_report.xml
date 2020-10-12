@@ -54,13 +54,13 @@
                                 <td> <span t-field="l.partner_id"/> </td>
                                 <td> <span t-field="l.move_id.invoice_date"/> </td>
                                 <td> <span t-field="l.move_id.name"/> </td>
-                                <td> <span t-field="l.price_unit"/> </td> <!-- must be also the dicount?-->
+                                <td> <span t-esc="round(l.price_subtotal/l.quantity,2)"/> </td> <!-- not price unit because we are taking into account also the discount-->
                                 <td> <t t-if="l.currency_id"><span t-field="l.currency_id"/> </t>
                                 	 <t t-if="not l.currency_id"><span t-field="l.company_id.currency_id"/> </t>
                                 </td>
                                 <td> <span t-field="l.quantity"/> </td>
-                                <td> <span t-esc="l.price_subtotal"/> </td> <!-- t-field is giving x lei -->
-                                <td> <span t-esc="l.tax_base_amount"/> </td> 
+                                <td> <span t-esc="round(l.price_subtotal, 2)"/> </td> <!-- t-field is giving x lei -->
+                                <td> <span t-esc="round(l.price_total-l.price_subtotal,2)"/> </td> 
                             </tr>
                         </tbody>
                     </table>
