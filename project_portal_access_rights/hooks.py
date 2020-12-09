@@ -34,20 +34,14 @@ def uninstall_hook(cr, registry):
     with api.Environment.manage():
         env = api.Environment(cr, SUPERUSER_ID, {})
         old_task_domain = """[
-            '|',
-                '&',
-                    ('project_id.privacy_visibility', '=', 'portal'),
-                    ('project_id.message_partner_ids', 'child_of', [user.partner_id.commercial_partner_id.id]),
-                '&',
-                    ('project_id.privacy_visibility', '=', 'portal'),
-                    ('message_partner_ids', 'child_of', [user.partner_id.commercial_partner_id.id]),
+                ('project_id.privacy_visibility', '=', 'portal'),
+                ('allowed_user_ids', 'in', user.ids),
             ]"""
         task_rule = env.ref("project.project_task_rule_portal")
         task_rule.domain_force = old_task_domain
         old_project_domain = """[
-                '&',
-                    ('privacy_visibility', '=', 'portal'),
-                    ('message_partner_ids', 'child_of', [user.partner_id.commercial_partner_id.id]),
+                ('privacy_visibility', '=', 'portal'),
+                ('allowed_portal_user_ids', 'in', user.ids),
             ]"""
         project_rule = env.ref("project.project_project_rule_portal")
         project_rule.domain_force = old_project_domain

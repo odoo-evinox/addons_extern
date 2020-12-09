@@ -3,7 +3,7 @@
 {
     "name": "Projects Portal Access Rights",
     "summary": "Add portal access rights to all project types",
-    "version": "13.0.1.0.0",
+    "version": "14.0.1.0.0",
     "development_status": "Mature",
     "category": "Security",
     "website": "https://nexterp.ro",
