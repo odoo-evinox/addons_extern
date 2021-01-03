@@ -2,6 +2,47 @@
 <!-- # Copyright 2020 NextERP Romania SRL
      # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl). -->
 <odoo>
+<!-- -              Internal transfer   location_id&location_dest_id.usage == "internal" -->
+    <record id="l10n_ro_picking_internTransfer_up" model="base.comment.template">
+        <field name="name">Romania - Comment for Internal Transfer Before Lines</field>
+        <field name="position">before_lines</field>
+        <field name="model_id" search="[('model','=','stock.picking')]"
+            model="ir.model"/>
+        <field name="model">stock.picking</field>
+        <field name="domain">[['location_dest_id.usage','not in',['production']],'|',['picking_type_code', '=', 'outgoing'],['picking_type_code', '=', 'internal']]</field>
+        <field name="default" eval="True" /> <!-- ['location_id.usage','=','internal'], -->
+        <field name="text"><![CDATA[
+                            <p>
+                                <span>Delivery Order</span>
+                            </p>
+                            <t t-if="${object.picking_type_code = 'internal'}">
+                                <table class="table table-condensed">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                Source Location
+                                            </th>
+                                            <th>
+                                                Destination Location
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                ${object.location_id.name}
+                                            </td>
+                                            <td>
+                                                ${object.location_dest_id.name}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+            ]]>
+        </field>
+    </record>
+
     <!--               out  stock sale                -->
     <record id="l10n_ro_picking_out_down" model="base.comment.template">
         <field name="name">Romania - Comment for Delivery After Lines</field>
@@ -109,7 +150,7 @@
        <!-- ['location_id.usage','=','internal'], -->
         <field name="text"><![CDATA[
             <p>
-                <span>Consume Voucher</span>
+                <span>CONSUME VOUCHER</span>
             </p>
             ]]>
         </field>
@@ -144,7 +185,6 @@
             </table>]]>
         </field>
     </record>
- 
 
 <!-- -              Internal transfer   location_id&location_dest_id.usage == "internal" -->
     <record id="l10n_ro_picking_internTransfer_up" model="base.comment.template">
