@@ -6,7 +6,7 @@
         <xpath expr="//table[hasclass('table-sm')]" position="before">
                 <p t-raw="o.get_comment_template('before_lines', o.company_id.id, o.partner_id and o.partner_id.id or False)"/>
         </xpath>
-        <xpath expr="//div[@class='page']" position="inside">
+        <xpath expr="//div[hasclass('page')]" position="inside">
             <p t-raw="o.get_comment_template('after_lines', o.company_id.id, o.partner_id and o.partner_id.id or False)"/>
         </xpath>
     </template>
