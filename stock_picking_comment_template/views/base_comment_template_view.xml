@@ -6,15 +6,20 @@
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">base.comment.template</field>
         <field name="view_mode">tree,form</field>
-        <field name="domain">[('model', '=', 'stock.picking')]</field>
-        <field name="context" eval="{'default_model_id':ref('stock.model_stock_picking')}"/>
-        <field name="view_id" ref="base_comment_template.view_base_comment_template_tree"/>
+          <field name="domain" eval="[('model_ids', 'in', [ref('stock.model_stock_picking')]) ]" /> 
+          <field name="context" eval="{'default_model_ids':[ref('stock.model_stock_picking')]}"/> 
+         <field name="view_id" ref="base_comment_template.view_base_comment_template_tree"/>
     </record>
-
-    <menuitem name="Stock Picking Comments"
+ 
+    <menuitem name="Stock Picking Comments2"
               id="menu_base_comment_template_picking"
-              action="stock_picking_comment_template.action_stock_picking_comment_template"
+              action="action_stock_picking_comment_template"
               parent="stock.menu_stock_config_settings"
     />
+
+<!--          
+        action="base_comment_template.action_base_comment_template"
+original merge 
+  -->
 
 </odoo>

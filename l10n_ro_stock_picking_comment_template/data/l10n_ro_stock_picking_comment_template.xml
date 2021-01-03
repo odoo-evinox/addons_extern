@@ -2,20 +2,54 @@
 <!-- # Copyright 2020 NextERP Romania SRL
      # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl). -->
 <odoo>
+<!-- -              Internal transfer   location_id&location_dest_id.usage == "internal" -->
+    <record id="l10n_ro_picking_internTransfer_up" model="base.comment.template">
+        <field name="name">Romania - Comment for Internal Transfer Before Lines</field>
+        <field name="position">before_lines</field>
+        <field name="model_id" search="[('model','=','stock.picking')]"
+            model="ir.model"/>
+        <field name="model">stock.picking</field>
+        <field name="domain">[['location_dest_id.usage','not in',['production']],'|',['picking_type_code', '=', 'outgoing'],['picking_type_code', '=', 'internal']]</field>
+        <field name="default" eval="True" /> <!-- ['location_id.usage','=','internal'], -->
+        <field name="text"><![CDATA[
+                            <p>
+                                <span>Delivery Order</span>
+                            </p>
+                            <t t-if="${object.picking_type_code = 'internal'}">
+                                <table class="table table-condensed">
+                                    <thead>
+                                        <tr>
+                                            <th>
+                                                Source Location
+                                            </th>
+                                            <th>
+                                                Destination Location
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                ${object.location_id.name}
+                                            </td>
+                                            <td>
+                                                ${object.location_dest_id.name}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </t>
+            ]]>
+        </field>
+    </record>
+
     <!--               out  stock sale                -->
     <record id="l10n_ro_picking_out_down" model="base.comment.template">
         <field name="name">Romania - Comment for Delivery After Lines</field>
         <field name="position">after_lines</field>
-        <field
-            name="model_id"
-            search="[('model','=','stock.picking')]"
-            model="ir.model"
-        />
-        <field name="model">stock.picking</field>
-        <field
-            name="domain"
-        >[['location_dest_id.usage','not in',['production','internal']],'|',['picking_type_code', '=', 'outgoing'],['picking_type_code', '=', 'internal']]</field>
-        <field name="default" eval="True" />
+        <field name="model_ids"  eval="[(6, 0,  [ref('stock.model_stock_picking')]) ]"   />
+        <field  name="domain"
+     >[['location_dest_id.usage','not in',['production','internal']],'|',['picking_type_code', '=', 'outgoing'],['picking_type_code', '=', 'internal']]</field>
         <field
             name="text"
         ><![CDATA[
@@ -52,17 +86,9 @@
     <record id="l10n_ro_picking_in_up" model="base.comment.template">
         <field name="name">Romania - Comment for Reception Before Lines</field>
         <field name="position">before_lines</field>
-        <field
-            name="model_id"
-            search="[('model','=','stock.picking')]"
-            model="ir.model"
-        />
-        <field name="model">stock.picking</field>
+        <field name="model_ids"  eval="[(6, 0,  [ref('stock.model_stock_picking')]) ]"   />
         <field name="domain">[['picking_type_code', '=', 'incoming']]</field>
-        <field name="default" eval="True" />
-        <field
-            name="text"
-        ><![CDATA[
+        <field name="text" ><![CDATA[
             <p>
                 <span>RECEPTION NOTE AND DIFFERENCES</span>
             </p>
@@ -74,17 +100,9 @@
     <record id="l10n_ro_picking_in_down" model="base.comment.template">
         <field name="name">Romania - Comment for Reception After Lines</field>
         <field name="position">after_lines</field>
-        <field
-            name="model_id"
-            search="[('model','=','stock.picking')]"
-            model="ir.model"
-        />
-        <field name="model">stock.picking</field>
+        <field name="model_ids"  eval="[(6, 0,  [ref('stock.model_stock_picking')]) ]"   />
         <field name="domain">[['picking_type_code', '=', 'incoming']]</field>
-        <field name="default" eval="True" />
-        <field
-            name="text"
-        ><![CDATA[
+        <field name="text"><![CDATA[
             <p>
                 <br/>
             </p>
@@ -127,17 +145,12 @@
     <record id="l10n_ro_picking_consume_up" model="base.comment.template">
         <field name="name">Romania - Comment for Consume Voucher Before Lines</field>
         <field name="position">before_lines</field>
-        <field
-            name="model_id"
-            search="[('model','=','stock.picking')]"
-            model="ir.model"
-        />
-        <field name="model">stock.picking</field>
+        <field name="model_ids"  eval="[(6, 0,  [ref('stock.model_stock_picking')]) ]"   />
         <field name="domain">[['location_id.usage','=','internal'],['location_dest_id.usage','=','production'] ]</field>
-        <field name="default" eval="True" /> <!-- ['location_id.usage','=','internal'], -->
+       <!-- ['location_id.usage','=','internal'], -->
         <field name="text"><![CDATA[
             <p>
-                <span>Consume Voucher</span>
+                <span>CONSUME VOUCHER</span>
             </p>
             ]]>
         </field>
@@ -145,14 +158,9 @@
     <record id="l10n_ro_picking_consume_down" model="base.comment.template">
         <field name="name">Romania - Comment for Consume Voucher After Lines</field>
         <field name="position">after_lines</field>
-        <field   name="model_id" search="[('model','=','stock.picking')]"
-            model="ir.model"/>
-        <field name="model">stock.picking</field>
+        <field name="model_ids"  eval="[(6, 0,  [ref('stock.model_stock_picking')]) ]"   />
         <field name="domain">[['location_id.usage','=','internal'],['location_dest_id.usage','=','production'] ]</field>
-        <field name="default" eval="True" />
-        <field
-            name="text"
-        ><![CDATA[
+        <field name="text"><![CDATA[
             <p>
                 <br/>
             </p>
@@ -177,17 +185,14 @@
             </table>]]>
         </field>
     </record>
- 
 
 <!-- -              Internal transfer   location_id&location_dest_id.usage == "internal" -->
     <record id="l10n_ro_picking_internTransfer_up" model="base.comment.template">
         <field name="name">Romania - Comment for Internal Transfer Before Lines</field>
         <field name="position">before_lines</field>
-        <field name="model_id" search="[('model','=','stock.picking')]"
-            model="ir.model"/>
-        <field name="model">stock.picking</field>
+        <field name="model_ids"  eval="[(6, 0,  [ref('stock.model_stock_picking')]) ]"   />
         <field name="domain">[['location_id.usage','=','internal'],['location_dest_id.usage','=','internal'] ]</field>
-        <field name="default" eval="True" /> <!-- ['location_id.usage','=','internal'], -->
+        <!-- ['location_id.usage','=','internal'], -->
         <field name="text"><![CDATA[
                             <table class="table table-condensed">
                                 <thead>
@@ -217,14 +222,9 @@
     <record id="l10n_ro_picking_internTransfer_down" model="base.comment.template">
         <field name="name">Romania - Comment for Internal Transfer Voucher After Lines</field>
         <field name="position">after_lines</field>
-        <field   name="model_id" search="[('model','=','stock.picking')]"
-            model="ir.model"/>
-        <field name="model">stock.picking</field>
+        <field name="model_ids"  eval="[(6, 0,  [ref('stock.model_stock_picking')]) ]"   />
         <field name="domain">[['location_id.usage','=','internal'],['location_dest_id.usage','=','internal'] ]</field>
-        <field name="default" eval="True" />
-        <field
-            name="text"
-        ><![CDATA[
+        <field name="text"><![CDATA[
             <p>
                 <br/>
             </p>

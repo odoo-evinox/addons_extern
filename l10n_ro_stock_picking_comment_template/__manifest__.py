@@ -18,7 +18,7 @@
     "data": ["data/l10n_ro_stock_picking_comment_template.xml",
              "views/stock_location_view.xml",
              "views/stock_picking_view.xml",
-#             "report/stock_picking_report_valued_for_purchase_inShop.xml"
+             "report/stock_picking_report_valued.xml"
              ],
     "license": "AGPL-3",
     "version": "13.0.1.0.0",
