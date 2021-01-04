@@ -60,7 +60,7 @@ class CommentTemplate(models.AbstractModel):
         if not template:
             return ""
         return self.env["mail.template"]._render_template(
-            template.text, self._name, self.id, post_process=True
+            template.text, self._name, [self.id], post_process=True
         )
 
 
@@ -166,7 +166,7 @@ class BaseCommentTemplate(models.Model):
                     .search(
                         [
                             ("model", "in", report_models),
-       #                     ("is_comment_template", "=", True),
+                            ("is_comment_template", "=", True),
                             "!",
                             ("name", "=like", "ir.%"),
                         ]
