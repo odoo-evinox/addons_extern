@@ -2,8 +2,9 @@ from odoo import models, fields, api, _
 
 
 class stock_picking(models.Model):
-    _inherit = 'stock.picking'
-
+    _inherit = ['stock.picking','comment.template']
+    _name = 'stock.picking'
+    
     delegate_id = fields.Many2one('res.partner', string='Delegate')
     mean_transp = fields.Char(string='Mean transport')
 # if the model stock_picking_repot_valued is is installed after this module will not work as intended

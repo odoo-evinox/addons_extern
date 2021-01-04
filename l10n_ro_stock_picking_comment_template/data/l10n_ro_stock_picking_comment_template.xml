@@ -6,11 +6,8 @@
     <record id="l10n_ro_picking_internTransfer_up" model="base.comment.template">
         <field name="name">Romania - Comment for Internal Transfer Before Lines</field>
         <field name="position">before_lines</field>
-        <field name="model_id" search="[('model','=','stock.picking')]"
-            model="ir.model"/>
-        <field name="model">stock.picking</field>
+        <field name="model_ids"  eval="[(6, 0,  [ref('stock.model_stock_picking')]) ]"/>
         <field name="domain">[['location_dest_id.usage','not in',['production']],'|',['picking_type_code', '=', 'outgoing'],['picking_type_code', '=', 'internal']]</field>
-        <field name="default" eval="True" /> <!-- ['location_id.usage','=','internal'], -->
         <field name="text"><![CDATA[
                             <p>
                                 <span>Delivery Order</span>

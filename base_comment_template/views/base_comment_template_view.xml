@@ -59,6 +59,9 @@
                             />
                             <field name="model_ids" widget="many2many_tags" />
                             <field name="partner_ids" widget="many2many_tags" />
+                        </group>
+                        <group >
+                            <field name="domain" />
                             <field name="priority" />
                         </group>
                     </group>

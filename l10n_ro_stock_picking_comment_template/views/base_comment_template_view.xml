@@ -11,15 +11,11 @@
          <field name="view_id" ref="base_comment_template.view_base_comment_template_tree"/>
     </record>
  
-    <menuitem name="Stock Picking Comments2"
+    <menuitem name="RO Stock Picking Comments"
               id="menu_base_comment_template_picking"
               action="action_stock_picking_comment_template"
               parent="stock.menu_stock_config_settings"
     />
 
-<!--          
-        action="base_comment_template.action_base_comment_template"
-original merge 
-  -->
 
 </odoo>
