@@ -47,7 +47,7 @@ class MT940Parser(models.AbstractModel):
         return '^:[0-9]{2}[A-Z]*:'
 
     def get_codewords(self):
-        return ['BENM', 'ADDR', 'NAME', 'CNTP', 'ISDT', 'REMI']
+        return ['Card', 'Acc.']
 
     def get_tag_61_regex(self):
         return re.compile(
@@ -81,22 +81,10 @@ class MT940Parser(models.AbstractModel):
         return factor * float(amount_str.replace(',', '.'))
 
     def get_subfields(self, data, codewords):
-        """Return dictionary with value array for each codeword in data.
-
-        For instance:
-        data =
-            /BENM//NAME/Kosten/REMI/Periode 01-10-2013 t/m 31-12-2013/ISDT/20
-        codewords = ['BENM', 'ADDR', 'NAME', 'CNTP', ISDT', 'REMI']
-        Then return subfields = {
-            'BENM': [],
-            'NAME': ['Kosten'],
-            'REMI': ['Periode 01-10-2013 t', 'm 31-12-2013'],
-            'ISDT': ['20'],
-        }
-        """
         subfields = {}
         current_codeword = None
-        for word in data.split('/'):
+        for word in codewords:
+            splitted_data = data.split(word)
             if not word and not current_codeword:
                 continue
             if word in codewords:
@@ -360,7 +348,21 @@ class MT940Parser(models.AbstractModel):
         banks occur"""
         if result['statement']['transactions']:
             transaction = result['statement']['transactions'][-1]
-            codewords = self.get_codewords()
-            subfields = self.get_subfields(data, codewords)
-            self.handle_common_subfields(transaction, subfields)
+            if data.startswith('Card'):
+                transaction['name'] = data.split('Card')[-1].strip()
+            else:
+                acc_regex = re.compile(
+                    r'^(?P<name>(\w| ){1,50}),.*Acc\.(?P<account>\w{1,30}) at '
+                    r'(?P<bank_name>(\w|\W)+?),.*Ref\..'
+                    r'(?P<ref>\w{1,50}).*'
+                 )
+                re_acc = acc_regex.match(data)
+                if re_acc:
+                    parsed_data = re_acc.groupdict()
+                    transaction['name'] = parsed_data['name'].strip()
+                    transaction['account_number'] = parsed_data['account'].strip()
+                    transaction['ref'] = parsed_data['ref'].strip()
+                else:
+                    if 'name' not in transaction:
+                        transaction['name'] = data
         return result
