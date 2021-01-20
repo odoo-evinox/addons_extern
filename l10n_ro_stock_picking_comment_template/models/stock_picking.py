@@ -13,6 +13,18 @@ class stock_picking(models.Model):
     installed_stock_picking_report_valued = fields.Boolean(compute="_compute_installed_stock_picking_report_valued", compute_sudo=True)
 
     show_shop_price = fields.Boolean(compute="_compute_installed_stock_picking_report_valued", compute_sudo=True)
+    is_internal_consumption = fields.Boolean(compute="_compute_is_internal_consumption")
+    total_internal_consumption = fields.Float(compute="_compute_total_internal_consumption")
+
+    def _compute_total_internal_consumption(self):
+        for pick in self:
+            pick.total_internal_consumption = sum([mvl.subtotal_internal_consumption for mvl in pick.move_line_ids])
+
+    def _compute_is_internal_consumption(self):
+        for pick in self:
+            pick.is_internal_consumption = pick.move_lines and \
+                                           (pick.move_lines[0]._is_internal_transfer() or \
+                                            pick.move_lines[0]._is_consumption())
     
     def _compute_installed_stock_picking_report_valued(self):
         stock_piging_report_valued = self.env['ir.module.module'].search([('name','=','stock_picking_report_valued')])

@@ -1,71 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-<!--  just for purchase: "and o.purchase_id"  -->
-<!--    <template id="valued_purchase_report_picking" inherit_id="stock.report_delivery_document">-->
-<!--    &lt;!&ndash;  table for o.state=='done'  meaning that has serial numbers and packaging -->
-<!--    lines are stock_move_lines     ( the not done tabels has lines as stock_moves)-->
-<!--    &ndash;&gt;-->
-<!--       <xpath expr="//table[@name='stock_move_line_table']/thead/tr" position="inside">-->
-<!--             <t t-if="o.valued and o.move_line_ids and o.purchase_id and  o.show_shop_price">   -->
-<!--                <th class="text-right"><strong>List Price</strong></th>-->
-<!--                <th class="text-right"><strong>Margin</strong></th>-->
-<!--                <th class="text-right"><strong>sale with margin total</strong></th>-->
-<!--             </t>-->
-<!--         </xpath>-->
-<!--    </template>-->
+    <!--  just for purchase: "and o.purchase_id"  -->
+    <!--    <template id="valued_purchase_report_picking" inherit_id="stock.report_delivery_document">-->
+    <!--    &lt;!&ndash;  table for o.state=='done'  meaning that has serial numbers and packaging -->
+    <!--    lines are stock_move_lines     ( the not done tabels has lines as stock_moves)-->
+    <!--    &ndash;&gt;-->
+    <!--       <xpath expr="//table[@name='stock_move_line_table']/thead/tr" position="inside">-->
+    <!--             <t t-if="o.valued and o.move_line_ids and o.purchase_id and  o.show_shop_price">   -->
+    <!--                <th class="text-right"><strong>List Price</strong></th>-->
+    <!--                <th class="text-right"><strong>Margin</strong></th>-->
+    <!--                <th class="text-right"><strong>sale with margin total</strong></th>-->
+    <!--             </t>-->
+    <!--         </xpath>-->
+    <!--    </template>-->
 
-<!-- modify the stock_move_line templates for with lots and without -->
-<!--	<template id="stock_report_purchase_delivery_price_values" inherit_id="stock.stock_report_delivery_has_serial_move_line">-->
-<!--		<xpath expr="//td[last()]" position="inside">-->
-<!--         <t t-if="o.valued and o.purchase_id and o.move_line_ids and  o.show_shop_price">-->
-<!--                <td class="text-right"><span t-field="move_line.list_price" /></td>-->
-<!--                <td class="text-right"><span t-field="move_line.margin" /></td>-->
-<!--                <td class="text-right"><span t-field="move_line.sale_with_margin_price_total"/></td>-->
-<!--            </t>			-->
-<!--		</xpath>	-->
-<!--	</template>-->
+    <!-- modify the stock_move_line templates for with lots and without -->
+    <!--	<template id="stock_report_purchase_delivery_price_values" inherit_id="stock.stock_report_delivery_has_serial_move_line">-->
+    <!--		<xpath expr="//td[last()]" position="inside">-->
+    <!--         <t t-if="o.valued and o.purchase_id and o.move_line_ids and  o.show_shop_price">-->
+    <!--                <td class="text-right"><span t-field="move_line.list_price" /></td>-->
+    <!--                <td class="text-right"><span t-field="move_line.margin" /></td>-->
+    <!--                <td class="text-right"><span t-field="move_line.sale_with_margin_price_total"/></td>-->
+    <!--            </t>			-->
+    <!--		</xpath>	-->
+    <!--	</template>-->
 
-<!--	<template id="stock_report_purchase_delivery_agg_price_values" inherit_id="stock.stock_report_delivery_aggregated_move_lines">-->
-<!--		<xpath expr="//td[last()]" position="after">-->
-<!--         <t t-if="o.valued and o.purchase_id and o.move_line_ids and  o.show_shop_price">-->
-<!--               <td class="text-right"> <span t-esc="aggregated_lines[line]['list_price']"/> </td>-->
-<!--                <td class="text-right"> <span t-esc="aggregated_lines[line]['margin']"/> </td>-->
-<!--                 <td class="text-right"><span t-esc="aggregated_lines[line]['sale_with_margin_price_total']"/></td>-->
-<!--             </t>			-->
-<!--		</xpath>	-->
-<!--	</template>-->
+    <!--	<template id="stock_report_purchase_delivery_agg_price_values" inherit_id="stock.stock_report_delivery_aggregated_move_lines">-->
+    <!--		<xpath expr="//td[last()]" position="after">-->
+    <!--         <t t-if="o.valued and o.purchase_id and o.move_line_ids and  o.show_shop_price">-->
+    <!--               <td class="text-right"> <span t-esc="aggregated_lines[line]['list_price']"/> </td>-->
+    <!--                <td class="text-right"> <span t-esc="aggregated_lines[line]['margin']"/> </td>-->
+    <!--                 <td class="text-right"><span t-esc="aggregated_lines[line]['sale_with_margin_price_total']"/></td>-->
+    <!--             </t>			-->
+    <!--		</xpath>	-->
+    <!--	</template>-->
 
     <template id="report_delivery_unit_price_document" inherit_id="stock.report_delivery_document">
-       <xpath expr="//th[@name='th_sm_quantity']" position="after">
+        <xpath expr="//th[@name='th_sm_quantity']" position="after">
             <t t-if="o.move_lines and (o.move_lines[0]._is_internal_transfer() or o.move_lines[0]._is_consumption())">
                 <th>
                     <strong>Unit Price</strong>
                 </th>
+                <th>
+                    <strong>Subtotal</strong>
+                </th>
             </t>
-         </xpath>
-         <xpath expr="//tr[@t-foreach='lines']/td[2]" position="after">
+        </xpath>
+        <xpath expr="//tr[@t-foreach='lines']/td[2]" position="after">
             <td>
                 <t t-if="move._is_internal_transfer() or move._is_consumption()">
                     <span t-esc="round(ml._get_unit_price_internal_consumption(), 2)"/>
                 </t>
             </td>
-         </xpath>
+            <td>
+                <t t-if="move._is_internal_transfer() or move._is_consumption()">
+                    <span t-esc="round(ml.subtotal_internal_consumption, 2)"/>
+                </t>
+            </td>
+        </xpath>
 
         <xpath expr="//th[@name='th_sml_quantity']" position="after">
             <t t-if="o.move_lines and (o.move_lines[0]._is_internal_transfer() or o.move_lines[0]._is_consumption())">
                 <th>
                     <strong>Unit Price</strong>
                 </th>
+                <th>
+                    <strong>Subtotal</strong>
+                </th>
             </t>
-         </xpath>
-         <xpath expr="//tr[@t-foreach='o.move_line_ids']/td[4]" position="after">
+        </xpath>
+        <xpath expr="//tr[@t-foreach='o.move_line_ids']/td[4]" position="after">
             <td>
                 <t t-if="move_line.move_id._is_internal_transfer() or move_line.move_id._is_consumption()">
                     <span t-esc="round(move_line._get_unit_price_internal_consumption(), 2)"/>
                 </t>
             </td>
-         </xpath>
+            <td>
+                <t t-if="move_line.move_id._is_internal_transfer() or move_line.move_id._is_consumption()">
+                    <span t-esc="round(move_line.subtotal_internal_consumption, 2)"/>
+                </t>
+            </td>
+        </xpath>
+        <xpath expr="//table[@name='stock_move_line_table']" position="after">
+            <t t-if="o.is_internal_consumption">
+                <div class="clearfix">
+                    <div name="total" class="row">
+                        <div t-attf-class="#{'col-6' if report_type != 'html' else 'col-sm-7 col-md-6'} ml-auto">
+                            <table class="table table-sm" style="page-break-inside: avoid;">
+                                <tr class="border-black o_total" style="">
+                                    <td>
+                                        <strong>Total</strong>
+                                    </td>
+                                    <td class="text-right">
+                                        <span t-field="o.total_internal_consumption"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </xpath>
 
     </template>
 </odoo>

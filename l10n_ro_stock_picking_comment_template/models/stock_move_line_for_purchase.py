@@ -12,10 +12,16 @@ from odoo.exceptions import ValidationError
 class StockMoveLine(models.Model):
     _inherit = "stock.move.line"
 
+    def _compute_subtotal_internal_consumption(self):
+        for line in self:
+            unit_price = line._get_unit_price_internal_consumption()
+            line.subtotal_internal_consumption = line.qty_done * unit_price
+
     list_price = fields.Float( related="product_id.list_price")    
     margin = fields.Float(string='Margin [%]', compute="_compute_sale_order_line_fields", compute_sudo=True)
     sale_with_margin_price_total = fields.Float(compute="_compute_sale_order_line_fields", compute_sudo=True)
 
+    subtotal_internal_consumption = fields.Float(compute="_compute_subtotal_internal_consumption")
 
     def _compute_purchase_order_line_fields(self):
         """to put aso the margin and sale_with_margin_price
