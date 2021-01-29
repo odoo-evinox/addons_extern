@@ -98,7 +98,7 @@ class StockMoveLine(models.Model):
         if self.move_id._is_internal_transfer():
             pl = self.move_id.picking_id.partner_id.property_product_pricelist
             return pl.price_get(self.move_id.product_id.id, self.move_id.product_qty)[pl.id]
-        elif self.move_id._is_consumption():
+        elif self.move_id._is_consumption() or self.move_id._is_consumption_return():
             avg = 0
             if self.move_id.stock_valuation_layer_ids:
                 avg = sum([svl.quantity * svl.unit_cost for svl in self.move_id.stock_valuation_layer_ids]) / \

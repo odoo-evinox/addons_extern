@@ -24,7 +24,8 @@ class stock_picking(models.Model):
         for pick in self:
             pick.is_internal_consumption = pick.move_lines and \
                                            (pick.move_lines[0]._is_internal_transfer() or \
-                                            pick.move_lines[0]._is_consumption())
+                                            pick.move_lines[0]._is_consumption() or \
+                                            pick.move_lines[0]._is_consumption_return())
     
     def _compute_installed_stock_picking_report_valued(self):
         stock_piging_report_valued = self.env['ir.module.module'].search([('name','=','stock_picking_report_valued')])
