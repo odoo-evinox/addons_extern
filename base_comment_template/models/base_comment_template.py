@@ -166,7 +166,7 @@ class BaseCommentTemplate(models.Model):
                     .search(
                         [
                             ("model", "in", report_models),
-                            ("is_comment_template", "=", True),
+#                            ("is_comment_template", "=", True),
                             "!",
                             ("name", "=like", "ir.%"),
                         ]
