@@ -1,11 +1,9 @@
 # Copyright 2019 Ecosoft Co., Ltd. (http://ecosoft.co.th)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
-import logging
 
 from odoo import models
 
-_logger = logging.getLogger(__name__)
 
 
 class ReportStockCardReportXlsx(models.AbstractModel):
@@ -13,49 +11,56 @@ class ReportStockCardReportXlsx(models.AbstractModel):
     _description = "Stock Card Report XLSX"
     _inherit = "report.report_xlsx.abstract"
 
+    format_ws_title = None
+
     def generate_xlsx_report(self, workbook, data, objects):
-        self._define_formats(workbook)
+
+
+        format_workbook = self._define_formats(workbook)
         for product in objects.product_ids:
-            for ws_params in self._get_ws_params(workbook, data, product):
+            for ws_params in self._get_ws_params(workbook, data, product,format_workbook):
                 ws_name = ws_params.get("ws_name")
                 ws_name = self._check_ws_name(ws_name)
                 ws = workbook.add_worksheet(ws_name)
                 generate_ws_method = getattr(self, ws_params["generate_ws_method"])
-                generate_ws_method(workbook, ws, ws_params, data, objects, product)
+                generate_ws_method(workbook, ws, ws_params, data, objects, product,format_workbook)
 
-    def _get_ws_params(self, wb, data, product):
+    def _get_ws_params(self, wb, data, product,format_workbook):
+
         filter_template = {
             "1_date_from": {
                 "header": {"value": "Date from"},
                 "data": {
                     "value": self._render("date_from"),
-                    "format": self.format_tcell_date_center,
+                    "format": format_workbook['format_tcell_date_center']
                 },
             },
             "2_date_to": {
                 "header": {"value": "Date to"},
                 "data": {
                     "value": self._render("date_to"),
-                    "format": self.format_tcell_date_center,
+                    "format": format_workbook['format_tcell_date_center'],
                 },
             },
             "3_location": {
                 "header": {"value": "Location"},
                 "data": {
                     "value": self._render("location"),
-                    "format": self.format_tcell_center,
+                    "format": format_workbook['format_tcell_center']
                 },
             },
         }
         initial_template = {
             "1_ref": {
-                "data": {"value": "Initial", "format": self.format_tcell_center},
+                "data": {"value": "Initial",
+                         "format": format_workbook['format_tcell_center']
+                         },
                 "colspan": 4,
             },
             "2_balance": {
                 "data": {
                     "value": self._render("balance"),
-                    "format": self.format_tcell_amount_right,
+                    "format": format_workbook['format_tcell_amount_right']
                 }
             },
         }
@@ -64,7 +69,7 @@ class ReportStockCardReportXlsx(models.AbstractModel):
                 "header": {"value": "Date"},
                 "data": {
                     "value": self._render("date"),
-                    "format": self.format_tcell_date_left,
+                    "format":  format_workbook['format_tcell_date_left']
                 },
                 "width": 25,
             },
@@ -72,25 +77,34 @@ class ReportStockCardReportXlsx(models.AbstractModel):
                 "header": {"value": "Reference"},
                 "data": {
                     "value": self._render("reference"),
-                    "format": self.format_tcell_left,
+                    "format": format_workbook['format_tcell_left'],
                 },
                 "width": 25,
             },
-            "3_input": {
+            "3_standard_price": {
+                "header": {"value": "Cost"},
+                "data": {
+                    "value": self._render("price_unit"),
+                },
+                "width": 25,
+            },
+
+            "4_input": {
                 "header": {"value": "Input"},
                 "data": {"value": self._render("input")},
                 "width": 25,
             },
-            "4_output": {
+            "5_output": {
                 "header": {"value": "Output"},
                 "data": {"value": self._render("output")},
                 "width": 25,
             },
-            "5_balance": {
+            "6_balance": {
                 "header": {"value": "Balance"},
                 "data": {"value": self._render("balance")},
                 "width": 25,
             },
+
         }
 
         ws_params = {
@@ -106,7 +120,7 @@ class ReportStockCardReportXlsx(models.AbstractModel):
         }
         return [ws_params]
 
-    def _stock_card_report(self, wb, ws, ws_params, data, objects, product):
+    def _stock_card_report(self, wb, ws, ws_params, data, objects, product, format_workbook):
         ws.set_portrait()
         ws.fit_to_pages(1, 0)
         ws.set_header(self.xls_headers["standard"])
@@ -121,7 +135,7 @@ class ReportStockCardReportXlsx(models.AbstractModel):
             row_pos,
             ws_params,
             col_specs_section="header",
-            default_format=self.format_theader_blue_center,
+            default_format=format_workbook['format_theader_blue_center'],
             col_specs="col_specs_filter",
             wanted_list="wanted_list_filter",
         )
@@ -145,7 +159,7 @@ class ReportStockCardReportXlsx(models.AbstractModel):
             row_pos,
             ws_params,
             col_specs_section="header",
-            default_format=self.format_theader_blue_center,
+            default_format= format_workbook['format_theader_blue_center'],
         )
         ws.freeze_panes(row_pos, 0)
         balance = objects._get_initial(
@@ -172,10 +186,13 @@ class ReportStockCardReportXlsx(models.AbstractModel):
                 col_specs_section="data",
                 render_space={
                     "date": line.date or "",
+                    "price_unit": line.price_unit or "",
                     "reference": line.reference or "",
                     "input": line.product_in or 0,
                     "output": line.product_out or 0,
                     "balance": balance,
                 },
-                default_format=self.format_tcell_amount_right,
+                default_format=format_workbook['format_tcell_amount_right']
             )
+
+

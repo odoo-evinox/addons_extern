@@ -1,7 +1,11 @@
 # Copyright 2019 Ecosoft Co., Ltd. (http://ecosoft.co.th)
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
+import logging
+
 from odoo import api, fields, models
+
+_logger = logging.getLogger(__name__)
 
 
 class StockCardView(models.TransientModel):
@@ -14,6 +18,7 @@ class StockCardView(models.TransientModel):
     product_qty = fields.Float()
     product_uom_qty = fields.Float()
     product_uom = fields.Many2one(comodel_name="uom.uom")
+    price_unit = fields.Float()
     reference = fields.Char()
     location_id = fields.Many2one(comodel_name="stock.location")
     location_dest_id = fields.Many2one(comodel_name="stock.location")
@@ -49,7 +54,7 @@ class StockCardReport(models.TransientModel):
         self._cr.execute(
             """
             SELECT move.date, move.product_id, move.product_qty,
-                move.product_uom_qty, move.product_uom, move.reference,
+                move.product_uom_qty, move.product_uom, move.price_unit, move.reference,
                 move.location_id, move.location_dest_id,
                 case when move.location_dest_id in %s
                     then move.product_qty end as product_in,
@@ -76,6 +81,7 @@ class StockCardReport(models.TransientModel):
         ReportLine = self.env["stock.card.view"]
         self.results = [ReportLine.new(line).id for line in stock_card_results]
 
+
     def _get_initial(self, product_line):
         product_input_qty = sum(product_line.mapped("product_in"))
         product_output_qty = sum(product_line.mapped("product_out"))
@@ -98,7 +104,7 @@ class StockCardReport(models.TransientModel):
             rcontext["o"] = report
             result["html"] = self.env.ref(
                 "stock_card_report.report_stock_card_report_html"
-            ).render(rcontext)
+            )._render(rcontext)
         return result
 
     @api.model
