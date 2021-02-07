@@ -64,8 +64,10 @@ class StockMoveLine(models.Model):
                                                        'description': description,
                                                        'qty_done': move_line.qty_done,
                                                        'product_uom': uom.name,
-                                                       'product': move_line.product_id,
-                                                        # added by us
+                                                       'product': move_line.product_id,}
+                                                        # added by us for puchase
+                    if 'purchase_price_unit' in  self._fields and 'purchase_line' in  self._fields:
+                        aggregated_move_lines[line_key].update( {
                                                         'purchase_price_unit': move_line.purchase_price_unit,
                                                        'purchase_tax_description': move_line.purchase_tax_description,
                                                        'purchase_price_subtotal': move_line.purchase_price_subtotal,
@@ -73,7 +75,7 @@ class StockMoveLine(models.Model):
                                     "margin": move_line.margin,
                                     "sale_with_margin_price_total": move_line.sale_with_margin_price_total,
 
-                                                       }
+                                                       })
 
                 else:
                     aggregated_move_lines[line_key]['qty_done'] += move_line.qty_done

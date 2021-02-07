@@ -13,6 +13,7 @@
                 "purchase_stock", 
                 "sale",
                 "l10n_ro_stock_account", # normaly is not neccesary, but without it is giving error at stock_location_view.xml import  
+                "base_comment_template",
                 ],
     "data": ["data/l10n_ro_stock_picking_comment_template.xml",
              "views/stock_location_view.xml",
