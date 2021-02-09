@@ -61,7 +61,7 @@ class CommentTemplate(models.AbstractModel):
             return ""
         return self.env["mail.template"]._render_template(
             template.text, self._name, [self.id], post_process=True
-        )
+        )[self.id]
 
 
 class BaseCommentTemplate(models.Model):
