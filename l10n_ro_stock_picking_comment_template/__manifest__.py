@@ -4,23 +4,27 @@
     "name": "Romania - Stock Picking Comment Template",
     "category": "Localization",
     "description":"""
-# if the model stock_picking_repot_valued is is installed after this module will not work as intended
-# in this module we overwrite the field valued = fields.Boolean(related="partner_id.valued_picking", readonly=True) not to be partner related
-# we didn't put dependency on this module because that module is dependent on stock_account that is maybe not used
+    This model is going to add a a header and a footer at picking report.
+    a transfer of type incoming  will have header RECEPTION NOTE AND DIFFERENCES,  and as footer a table for reception and differencies
+    internal to location   - has a signature for giving and receiving
+    internal to consume - is a consume
+    
+    installed_stock_picking_report_valued field in stock_picking is telling ig the stock_picking_repot_valued is instaleed. If is intaled will show also values in picking
+    we didn't put dependency stock_picking_repot_valued because that module is dependent on stock_account that is maybe not used
     
     """,
     "depends": ["stock", 
                 "purchase_stock", 
                 "sale",
-                "l10n_ro_stock", #l10n_ro_stock_account normally is not neccesary, but without it is giving error at stock_location_view.xml import  
+                "l10n_ro_stock",  
                 "base_comment_template",
                 ],
-    "data": ["data/l10n_ro_stock_picking_comment_template.xml",
+    "data": [
+            "data/l10n_ro_stock_picking_comment_template.xml",
+        
              "views/stock_location_view.xml",
              "views/stock_picking_view.xml",
              "views/base_comment_template_view.xml",
-             
-             "views/report_delivery_document.xml",
              
 #             "report/stock_picking_report_valued.xml",
              "report/report_picking.xml",

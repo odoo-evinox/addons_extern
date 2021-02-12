@@ -28,6 +28,7 @@ class StockPicking(models.Model):
     amount_total = fields.Monetary(
         compute="_compute_amount_all", string="Total", compute_sudo=True
     )
+    installed_stock_picking_report_valued = fields.Boolean(default=True,readonly=1,store=True, help="used by other module to know if they must/can show the fields added from this module")
 
     def _compute_amount_all(self):
         """This is computed with sudo for avoiding problems if you don't have

@@ -3,6 +3,7 @@
 # Copyright 2018 Luis M. Ontalba - Tecnativa <luis.martinez@tecnativa.com>
 # Copyright 2016-2018 Carlos Dauden - Tecnativa <carlos.dauden@tecnativa.com>
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+# 2021 NextERP
 
 from odoo import fields, models
 from odoo.exceptions import ValidationError
@@ -18,7 +19,7 @@ class StockMoveLine(models.Model):
 
 
     def _compute_purchase_order_line_fields(self):
-        """to put aso the margin and sale_with_margin_price
+        """to put also the margin and sale_with_margin_price   # only if the stock_picking_report_valuated is installed
         """
         for line in self:
             margin = 0

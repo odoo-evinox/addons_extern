@@ -10,9 +10,10 @@
                            context="{'simple_form':True, 'parent_partner_id':partner_id } "/>
                     <field name="mean_transp"/>
                     <field name="installed_stock_picking_report_valued" invisible="1"/>
-                    <field name="valued" attrs="{'invisible':[('installed_stock_picking_report_valued','=',False)]}"/>
-                </field>
+                     <field name="show_shop_price" readonly="1" attrs="{'invisible':[('installed_stock_picking_report_valued','=',False)]}"/>
+                 </field>
             </field>
+
         </record>
 
 </odoo>
