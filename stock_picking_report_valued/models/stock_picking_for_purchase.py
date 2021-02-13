@@ -10,7 +10,7 @@ from odoo import fields, models
 class StockPickingForPurchase(models.Model):
     _inherit = "stock.picking"
 
-    purchase_id = fields.Many2one('purchase.order',readonly=1,string="Created by this purchase")  # or lile om sa;e tp be related to procurmet group? 
+    purchase_id = fields.Many2one('purchase.order',readonly=1,string="Created by this purchase")  
     currency_id = fields.Many2one(
         #related="sale_id.currency_id",
         compute="_compute_amount_all",

@@ -86,13 +86,21 @@
         <field name="model_ids"  eval="[(6, 0,  [ref('stock.model_stock_picking')]) ]"   />
         <field name="domain">[['picking_type_code', '=', 'incoming']]</field>
         <field name="text" ><![CDATA[
-            <p>
-                <span>RECEPTION NOTE AND DIFFERENCES</span>
-            </p>
-            <span>The undersigned, members of the reception commission, I received the material values provided by: ${object.partner_id.name}, delegate: ${object.delegate_id.name if object.delegate_id else '.'*60 },
-                car no.: ${object.mean_transp or "."*32}, based on the accompanying documents: ${object.purchase_id.partner_ref or (object.purchase_id.invoice_ids and (object.purchase_id.invoice_ids[0].ref or object.purchase_id.invoice_ids[0].name) or '.'*47)  or '.'*47}, noting:
+            <p> <span>RECEPTION NOTE AND DIFFERENCES</span></p>
+            <span>The undersigned, members of the reception commission, I received the material values provided by: 
+            ${object.partner_id.name}, 
+            delegate: ${object.delegate_id.name if object.delegate_id else '.'*60 },
+            car no.: ${object.mean_transp or "."*32}, 
+            based on the accompanying documents: 
+ ${object.purchase_id.partner_ref+'; ' if object.purchase_id.partner_ref else  ''}
+ ${object.purchase_id.invoice_ids[0].name if object.purchase_id.invoice_ids else  ''}
+ ${'' if  object.purchase_id.invoice_ids else or  object.purchase_id.partner_ref else  '.'*60}
+  , noting:
             </span>]]>
         </field>
+<!--   ${object.purchase_id.partner_ref or 
+            	((object.purchase_id.invoice_ids and (object.purchase_id.invoice_ids[0].ref or object.purchase_id.invoice_ids[0].name) or '.'*47))  }          
+ -->
     </record>
     <record id="l10n_ro_picking_in_down" model="base.comment.template">
         <field name="name">Romania - Comment for Reception After Lines</field>

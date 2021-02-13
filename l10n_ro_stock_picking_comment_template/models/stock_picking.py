@@ -4,6 +4,9 @@ from odoo import models, fields, api, _
 class stock_picking(models.Model):
     _inherit = ['stock.picking','comment.template']
     _name = 'stock.picking'
+
+    purchase_id = fields.Many2one('purchase.order',readonly=1,string="Created by this purchase")  
+
     
     delegate_id = fields.Many2one('res.partner', string='Delegate')
     mean_transp = fields.Char(string='Mean transport')
