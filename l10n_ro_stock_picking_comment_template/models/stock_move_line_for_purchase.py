@@ -13,35 +13,6 @@ from odoo.exceptions import ValidationError
 class StockMoveLine(models.Model):
     _inherit = "stock.move.line"
 
-    list_price = fields.Float( related="product_id.list_price")    
-    margin = fields.Float(string='Margin [%]', compute="_compute_sale_order_line_fields", compute_sudo=True)
-    sale_with_margin_price_total = fields.Float(compute="_compute_sale_order_line_fields", compute_sudo=True)
-
-
-    def _compute_purchase_order_line_fields(self):
-        """to put also the margin and sale_with_margin_price   # only if the stock_picking_report_valuated is installed
-        """
-        for line in self:
-            margin = 0
-            sale_with_margin_price_total = 0
-            if 'purchase_price_unit' in  self._fields and 'purchase_line' in  self._fields:
-                # means that the stock_picking report is installed
-                super()._compute_purchase_order_line_fields() # the before behavior 
-                margin = (line.list_price - line.purchase_price_unit)/100
-                taxes = self.product_id.taxes_id.compute_all(
-                    price_unit=line.purchase_price_unit,
-                   # currency=line.currency_id,  line.purchase_currency_id
-                    quantity=line.qty_done or line.product_qty,
-                    product=line.product_id,
-                    #partner=,
-                )
-                sale_with_margin_price_total = taxes["total_included"]
-            line.update(
-                {
-                    "margin": margin,
-                    "sale_with_margin_price_total": sale_with_margin_price_total,
-                }
-            )
    
     def _get_aggregated_product_quantities(self, **kwargs):
         """giving also the purchase_price needed for showing in report
