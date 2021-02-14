@@ -42,15 +42,15 @@ class StockMoveLine(models.Model):
                     "sale_with_margin_price_total": sale_with_margin_price_total,
                 }
             )
-    
+   
     def _get_aggregated_product_quantities(self, **kwargs):
         """giving also the purchase_price needed for showing in report
         this function is used in aggregated lines template 
         """
-        if self.picking_id.sale_id:
+        if (not self.picking_id.installed_stock_picking_report_valued) and (not  self.picking_id.purchase_id):
             return super()._get_aggregated_product_quantities(**kwargs)
-        elif self.picking_id.purchase_id:
-            "rewrite of function "
+        else:
+            "rewrite of original function to add also price"
             aggregated_move_lines = {}
             for move_line in self:
                 name = move_line.product_id.display_name
@@ -66,15 +66,12 @@ class StockMoveLine(models.Model):
                                                        'qty_done': move_line.qty_done,
                                                        'product_uom': uom.name,
                                                        'product': move_line.product_id,}
-                                                        # added by us for puchase
-                    if 'purchase_price_unit' in  self._fields and 'purchase_line' in  self._fields:
-                        aggregated_move_lines[line_key].update( {
+                    # added by us for purchase
+                    aggregated_move_lines[line_key].update( {
                                                         'purchase_price_unit': move_line.purchase_price_unit,
                                                        'purchase_tax_description': move_line.purchase_tax_description,
                                                        'purchase_price_subtotal': move_line.purchase_price_subtotal,
                                                        'purchase_price_tax': move_line.purchase_price_tax,
-                                    "margin": move_line.margin,
-                                    "sale_with_margin_price_total": move_line.sale_with_margin_price_total,
 
                                                        })
 
@@ -83,10 +80,6 @@ class StockMoveLine(models.Model):
                     # added by us
                     aggregated_move_lines[line_key]['purchase_price_subtotal'] += move_line.purchase_price_subtotal
                     aggregated_move_lines[line_key]['purchase_price_tax'] += move_line.purchase_price_tax
-                    #now
-                    aggregated_move_lines[line_key]['margin'] += move_line.margin
-                    aggregated_move_lines[line_key]['sale_with_margin_price_total'] += move_line.sale_with_margin_price_total
-                    
                 
             return aggregated_move_lines
         return {}

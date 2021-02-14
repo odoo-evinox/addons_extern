@@ -14,6 +14,7 @@
 
 <!-- add file name based on picking_type. before all of them were Delivery Slip -->
         <record id="stock.action_report_delivery" model="ir.actions.report">
+            <field name="report_type">qweb-html</field>
             <field name="print_report_name">'%s Slip - %s - %s' % (object.picking_type_code, object.partner_id.name or '', object.name)</field>
         </record>
 
