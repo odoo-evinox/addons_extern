@@ -3,18 +3,18 @@
 
     <template id="report_delivery_document_comments"
               inherit_id="stock.report_delivery_document">
-        <xpath expr="//table[hasclass('table-sm')]" position="before">
+        <xpath expr="//table[@name='stock_move_table']" position="before">
                 <p t-raw="o.get_comment_template('before_lines', o.company_id.id, o.partner_id and o.partner_id.id or False)"/>
         </xpath>
         <xpath expr="//div[hasclass('page')]" position="inside">
             <p t-raw="o.get_comment_template('after_lines', o.company_id.id, o.partner_id and o.partner_id.id or False)"/>
-        </xpath>
+       </xpath>
     </template>
 
 
 <!-- add file name based on picking_type. before all of them were Delivery Slip -->
         <record id="stock.action_report_delivery" model="ir.actions.report">
-            <field name="report_type">qweb-html</field>
+            <field name="report_type">qweb-pdf</field> <!--qweb-html-->
             <field name="print_report_name">'%s Slip - %s - %s' % (object.picking_type_code, object.partner_id.name or '', object.name)</field>
         </record>
 

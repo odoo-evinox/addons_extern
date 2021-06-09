@@ -23,7 +23,7 @@ Stock Quantity History Location
     :target: https://runbot.odoo-community.org/runbot/151/13.0
     :alt: Try me on Runbot
 
-|badge1| |badge2| |badge3| |badge4| |badge5| 
+|badge1| |badge2| |badge3| |badge4| |badge5|
 
 This module allows to run an Inventory report or Inventory Valuation
 report by location, for a past date or for current date.

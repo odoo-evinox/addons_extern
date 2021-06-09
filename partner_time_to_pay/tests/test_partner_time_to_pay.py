@@ -3,7 +3,6 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
 
 from dateutil.relativedelta import relativedelta
-
 from odoo.fields import Date
 from odoo.tests.common import TransactionCase
 

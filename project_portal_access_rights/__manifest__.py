@@ -15,5 +15,5 @@
     "uninstall_hook": "uninstall_hook",
     "depends": [
         "project",
-    ]
+    ],
 }

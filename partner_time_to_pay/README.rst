@@ -23,7 +23,7 @@ Partner Time to Pay
     :target: https://runbot.odoo-community.org/runbot/94/13.0
     :alt: Try me on Runbot
 
-|badge1| |badge2| |badge3| |badge4| |badge5| 
+|badge1| |badge2| |badge3| |badge4| |badge5|
 
 This module displays statistics related to the receivables and payables behavior of a partner on the Accounting tab of the partner form view.
 
@@ -110,7 +110,7 @@ promote its widespread use.
 
 Current `maintainer <https://odoo-community.org/page/maintainer-role>`__:
 
-|maintainer-max3903| 
+|maintainer-max3903|
 
 This module is part of the `OCA/account-invoice-reporting <https://github.com/OCA/account-invoice-reporting/tree/13.0/partner_time_to_pay>`_ project on GitHub.
 

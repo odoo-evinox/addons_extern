@@ -1,6 +1,7 @@
 # Copyright (C) 2020 NextERP Romania
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
-from odoo import api, SUPERUSER_ID
+from odoo import SUPERUSER_ID, api
+
 
 def post_init_hook(cr, registry):
     """Loaded after installing the module."""

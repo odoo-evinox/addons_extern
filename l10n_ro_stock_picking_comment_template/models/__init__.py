@@ -1,6 +1,2 @@
-from . import res_partner
-from . import stock_location
-from . import stock_picking
-from . import stock_move_line_for_purchase
-from . import purchase
-
+from . import (purchase, res_partner, stock_location,
+               stock_move_line_for_purchase, stock_picking)
