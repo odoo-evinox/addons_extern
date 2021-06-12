@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="account_payment_import_bank_button" model="ir.ui.view">
+        <field name="model">account.payment</field>
+        <field name="inherit_id" ref="account.view_account_payment_tree"/>
+        <field name="arch" type="xml">
+            <tree position="attributes">
+                <attribute name="js_class">button_after_create_payment</attribute>
+            </tree>
+
+<!-- working only arter are selected some lines     
+       <header position="inside">
+                <button  name="%(account_payment_import_bank_action)d"  type="action" string="Import Bank Statemetns" class="oe_highlight"/>
+            </header>
+-->        </field>
+    </record>
+</odoo>
