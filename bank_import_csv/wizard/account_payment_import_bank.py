@@ -9,6 +9,7 @@ from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
 from odoo.addons.base.models.res_bank import sanitize_account_number
+
 _reader = codecs.getreader('utf-8')
 
 logger = logging.getLogger(__name__)
@@ -30,13 +31,16 @@ class AccountPaymentImportBank(models.TransientModel):
     )
     journal_id = fields.Many2one('account.journal',domain=[('type','=','bank')],require=1, default=lambda self: self.env['account.journal'].search([('type','=','bank')],limit=1))
     suported_formats = fields.Char(default='*.csv format for Banca Transilvania;', help="list of file types and the bank that is for", readonly=1)
+    text = fields.Char(default='Pentru retrageri de numerar se va considera ca contul de casa este primul jurnal de cash / registru de casa gasit',  readonly=1)
     statement_filename = fields.Char()
+    post_this_payments = fields.Boolean(default=True, help="If you check this after the creation of payments is going to post them")
 
 
     def import_file_button(self):
         """Process the file chosen in the wizard, create bank statement(s)
         and return an action."""
         self.ensure_one()
+        Payment = self.env['account.payment']
         if not self.statement_filename.endswith('.csv'):
             raise UserError('The file does not have the extersion .csv. We are not continuing')
         if not self.journal_id or (not self.journal_id.bank_id) or ('ransilvania' not in self.journal_id.bank_id.name):
@@ -46,8 +50,9 @@ class AccountPaymentImportBank(models.TransientModel):
 
             
         result = {
-            "statement_ids": [],
-            "notifications": [],
+            "written_payments_ids": [],  # list of tuple(resulted_object ,readon/notificatoin,written values) 
+            "not_written_payments_ids": [],
+            'error_payments_ids':[],
         }
         logger.info("Start to import bank statement file %s", self.statement_filename)
         file_data = base64.b64decode(self.statement_file)
@@ -58,6 +63,8 @@ class AccountPaymentImportBank(models.TransientModel):
         transaction_rows = False 
         try:
             for fields in reader:
+                if not fields:
+                    continue
                 if fields == transilvania_table_header :
                     if  transaction_rows:
                         raise UserError(f'We found 2 lines with header ={transilvania_table_header}, something is wrong')
@@ -67,34 +74,85 @@ class AccountPaymentImportBank(models.TransientModel):
                 if not transaction_rows:
                     continue
                 # from here are the transactions that we are going to process
-                payment_value_to_wirte = {'journal_id':self.journal_id}
+                payment_value_to_wirte = {'journal_id':self.journal_id.id}
                 for field_name, value in zip(table_header_to_payment_fields,fields):
                     if  field_name:
                         payment_value_to_wirte[field_name] =  value
-                debit = field_name[debit_index] *-1
-                credit = field_name[credit_index] 
+                debit = float(fields[debit_index].replace(',','') or '0') *-1
+                credit = float(fields[credit_index].replace(',','') or '0' )
                 if debit:
                     payment_value_to_wirte['payment_type'] = 'outbound' 
-                    payment_value_to_wirte['amount'] = float(debit)
+                    payment_value_to_wirte['amount'] = debit
                     payment_value_to_wirte['partner_type'] = 'supplier'
                 else:
                     payment_value_to_wirte['payment_type'] = 'inbound'
-                    payment_value_to_wirte['amount'] = float(credit)
+                    payment_value_to_wirte['amount'] = credit
                     payment_value_to_wirte['partner_type'] = 'customer'
-                payment_value_to_wirte['amount']=  float(payment_value_to_wirte['bank_balance'])
+                payment_value_to_wirte['bank_balance']=  float(payment_value_to_wirte['bank_balance'].replace(',','') )
                 values += [payment_value_to_wirte]
+#                print(payment_value_to_wirte)
         except Exception as e:
-            raise UserError(
-                _(
-                    "The following problem occurred during import. "
-                    "The file might not be valid.\n\n %s"
-                )
-                % str(e)
-            )
+            raise UserError(_("The following problem occurred during parsing import file.\n\n %s")% str(e))
         
                 
         if not values:
-            raise UserError( "We did not find any values to import in this file"            )
+            raise UserError( "We did not find any values to import in this file" )
+        sequence_date = ''
+        index=0  # used to create the squence for transaction 
+        for val in values:
+            uniqueid = val['bank_tranzaction_uniqueid']
+            this_date = val['date'].replace('-','')
+#            if sequence_date > this_date:
+                # raise error? but is working also iwth data in another order
+            if this_date != sequence_date:
+                index = 0
+                sequence_date = this_date
+            else:
+                index +=1 
+            val['sequence']=index #int(sequence_date+ str(index).zfill(3))
+
+            desc = val['original_description'].lower()
+            out = payment_value_to_wirte['payment_type'] == 'outbound' 
+            val['separated_description'] = desc.replace(';',"\n")
+#            print(val['separated_description'] +"\n***************88")
+            if out: # out transaction
+                if ('comision procesare' in desc or 'taxa rapoarte tranzactii' in desc or 'ota contabila individuala' in desc or 'nota contabila individuala' in desc) : 
+                    val['is_bank_fee'] = True
+                elif 'retragere de numerar'  in desc:
+                    val['is_internal_transfer'] = True
+                    val['transfer_journal_id'] = self.env['account.journal'].search([('type','=','cache')],limit=1)
+            else: # are in transaction  + transactions
+                if  'nota contabila individuala' in desc: 
+                    val['is_bank_interest'] = True
+            
+            if uniqueid:
+                same_payment = Payment.search([('bank_tranzaction_uniqueid','=',uniqueid),('state','!=','cancel')])
+                if same_payment:
+                    result['not_written_payments_ids'].append((same_payment,f'based on bank_tranzaction_uniqueid same_payent exist already registred as {same_payment}',val))
+                    continue
+# here I must search also the 
+                try:
+                    res = Payment.create(val)
+                    result['written_payments_ids'].append((res,f'OK, created {res}',val))                    
+                except Exception as ex:
+                    result['error_payments_ids'].append((0,f'ERORR at create: {ex}',val))
+                    
+                
+            else:
+                raise UserError(f'The file does not look like transilvania csv export, because does not have bank_tranzaction_uniqueid')
+        
+        # post payments, reconcile them..    
+        if self.post_this_payments:
+            for res in result['written_payments_ids']:
+                res[1].action_post()
+            for res in result['not_written_payments_ids']:
+                if res[0].state == 'draft':
+                    res[0].action_post()
+        print(f"result['written_payments_ids']:{result['written_payments_ids']}")
+        print(f"result['not_written_payments_ids']:{result['not_written_payments_ids']}")
+        print(f"result['error_payments_ids']:{result['error_payments_ids']}")
+        
+
         # self.env["ir.attachment"].create(self._prepare_create_attachment(result))
         # if self.env.context.get("return_regular_interface_action"):
             # action = (

@@ -11,6 +11,7 @@
                         <field name="journal_id"  />
                         <field name="statement_file" filename="statement_filename" />
                         <field name="statement_filename" invisible="1" />
+                         <field name="post_this_payments"/>
                     </group>
                     <footer>
                         <button
