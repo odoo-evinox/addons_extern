@@ -80,7 +80,7 @@ class AccountPaymentImportBank(models.TransientModel):
                         payment_value_to_wirte[field_name] =  value
                 debit = float(fields[debit_index].replace(',','') or '0') *-1
                 credit = float(fields[credit_index].replace(',','') or '0' )
-                if debit:
+                if debit:  # debit and credit are from bank point of view
                     payment_value_to_wirte['payment_type'] = 'outbound' 
                     payment_value_to_wirte['amount'] = debit
                     payment_value_to_wirte['partner_type'] = 'supplier'
@@ -99,6 +99,8 @@ class AccountPaymentImportBank(models.TransientModel):
             raise UserError( "We did not find any values to import in this file" )
         sequence_date = ''
         index=0  # used to create the squence for transaction 
+        fee_account = self.env['account.account'].search([('name','ilike','Cheltuieli cu serviciile bancare'),('code','ilike','6270')],limit=1)
+        interest_account =  self.env['account.account'].search([('name','ilike','Venituri din dobânzi'),('code','ilike','7660')],limit=1)
         for val in values:
             uniqueid = val['bank_tranzaction_uniqueid']
             this_date = val['date'].replace('-','')
@@ -112,18 +114,23 @@ class AccountPaymentImportBank(models.TransientModel):
             val['sequence']=index #int(sequence_date+ str(index).zfill(3))
 
             desc = val['original_description'].lower()
-            out = payment_value_to_wirte['payment_type'] == 'outbound' 
+            out = val['payment_type'] == 'outbound' 
             val['separated_description'] = desc.replace(';',"\n")
 #            print(val['separated_description'] +"\n***************88")
             if out: # out transaction
                 if ('comision procesare' in desc or 'taxa rapoarte tranzactii' in desc or 'ota contabila individuala' in desc or 'nota contabila individuala' in desc) : 
                     val['is_bank_fee'] = True
+                    val['line_ids'] = [(0,0,{'account_id':fee_account.id,'debit':val['amount']}),(0,0,{'account_id':self.journal_id.default_account_id.id,'credit':val['amount']})]
                 elif 'retragere de numerar'  in desc:
                     val['is_internal_transfer'] = True
                     val['transfer_journal_id'] = self.env['account.journal'].search([('type','=','cache')],limit=1)
             else: # are in transaction  + transactions
                 if  'nota contabila individuala' in desc: 
                     val['is_bank_interest'] = True
+                    val['move_id'] = [ (0,0, {'move_line_ids':
+                        [(0,0,{'account_id':interest_account.id,'credit':val['amount'],'currency_id':self.journal_id.currency_id.id}),
+                         (0,0,{'account_id':self.journal_id.default_account_id.id,'debit':val['amount'], 'currency_id':self.journal_id.currency_id.id})]
+                        })]
             
             if uniqueid:
                 same_payment = Payment.search([('bank_tranzaction_uniqueid','=',uniqueid),('state','!=','cancel')])
@@ -144,13 +151,27 @@ class AccountPaymentImportBank(models.TransientModel):
         # post payments, reconcile them..    
         if self.post_this_payments:
             for res in result['written_payments_ids']:
-                res[1].action_post()
+                pass
+                #res[1].action_post()
             for res in result['not_written_payments_ids']:
                 if res[0].state == 'draft':
-                    res[0].action_post()
+                    pass
+#                    res[0].action_post()
         print(f"result['written_payments_ids']:{result['written_payments_ids']}")
         print(f"result['not_written_payments_ids']:{result['not_written_payments_ids']}")
         print(f"result['error_payments_ids']:{result['error_payments_ids']}")
+        t1 = '\n'.join([str(x) for x in result['written_payments_ids']])
+        t2 = '\n'.join([str(x) for x in result['not_written_payments_ids']])
+        t3 = '\n'.join([str(x) for x in result['error_payments_ids']])
+        return {'name':'some name',
+                'view_type': 'form', 'view_mode': 'form',
+                'res_model': "result.wizard",   'domain': [],  'context': {"default_text1":f"result['written_payments_ids']:\n{t1}",
+                                                                           "default_text2":f"result['not_written_payments_ids']:{t2}",
+                                                                            "default_text3":f"result['error_payments_ids']:{t3}",    }, 
+                'type': 'ir.actions.act_window',  
+                'target': 'new'
+            
+            }
         
 
         # self.env["ir.attachment"].create(self._prepare_create_attachment(result))

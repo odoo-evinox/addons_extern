@@ -30,7 +30,7 @@
                          <attribute name="attrs">{'readonly': [('state', '!=', 'draft')], 'invisible': ['|','|',('is_bank_fee', '=', True),('is_bank_interest', '=', True),('is_internal_transfer', '=', True)]}</attribute>
                     </field>
                     <field name="destination_account_id"  position="attributes">
-                         <attribute name="attrs">{'readonly': [('state', '!=', 'draft')], 'invisible': ['|','|',('is_bank_fee', '=', True),('is_bank_interest', '=', True),('is_internal_transfer', '=', True)]}</attribute>
+                         <attribute name="attrs">{'readonly': [('state', '!=', 'draft')], 'invisible': [('is_internal_transfer', '=', True)]}</attribute>
                     </field>
                     <field name="is_internal_transfer" position="after">
                         <field name="transfer_journal_id" attrs="{'readonly': ['|',('state', '!=', 'draft'),('transfer_related_payment_id', '!=', False)],'invisible':[('is_internal_transfer','=',False)]}"/>

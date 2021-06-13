@@ -14,7 +14,8 @@
     'depends': ['account'],
     'data': [
         'wizard/account_payment_import_bank.xml',
-        # 'views/button_after_create_payment.xml',
+        'wizard/result_wizard.xml',
+        
         'views/account_payment.xml',
         'views/assets.xml',
         'security/ir.model.access.csv',
