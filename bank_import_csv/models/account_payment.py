@@ -10,7 +10,8 @@ class AccountPayment(models.Model):
     
     original_description = fields.Text(readonly=1,help="Original text imported from bank statement")
     separated_description = fields.Text(readonly=1,help="Original text separated by ; and replace by line feed; exist also the original_descriptin field")
-    bank_tranzaction_uniqueid = fields.Char(readonly=1,help="if this is not null is the ank unique tranzaction id and must be unique")
+    bank_tranzaction_uniqueid = fields.Char(readonly=1,help="if this is not null is the bank unique tranzaction id and must be unique")
+    bank_partner_account = fields.Char(readonly=1,help="if this is not null is the parnter bank account for transaction (used in future to put same partner form same account (if no other parner found)) ")
 
     bank_balance = fields.Float(readonly=1,help="the balance from imported bank statement")
 
@@ -228,7 +229,7 @@ class AccountPayment(models.Model):
     def constrains_bank_tranzaction_uniqueid(self):
         for rec in self:
             if rec.bank_tranzaction_uniqueid:
-                same_id = self.search([('rec.bank_tranzaction_uniqueid','=',rec.bank_tranzaction_uniqueid),('id','not in', rec.ids)],limit=1)
+                same_id = self.search([('bank_tranzaction_uniqueid','=',rec.bank_tranzaction_uniqueid),('id','not in', rec.ids)],limit=1)
                 if same_id:
                     raise ValidationError(f'we have same bank_tranzaction_uniqueid={rec.bank_tranzaction_uniqueid} in {same_id}')
 

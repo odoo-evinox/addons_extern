@@ -36,6 +36,7 @@ class AccountPaymentImportBank(models.TransientModel):
     post_this_payments = fields.Boolean(default=True, help="If you check this after the creation of payments is going to post them")
 
 
+
     def import_file_button(self):
         """Process the file chosen in the wizard, create bank statement(s)
         and return an action."""
@@ -51,9 +52,12 @@ class AccountPaymentImportBank(models.TransientModel):
             
         result = {
             "written_payments_ids": [],  # list of tuple(resulted_object ,readon/notificatoin,written values) 
-            "not_written_payments_ids": [],
+            "modified_payments_ids": [],  #paymentst that were recordeb before and we modified them 
+            "not_written_payments_ids": [], #paymentst that have been imported before ( they have the same bank uniqueid
             'error_payments_ids':[],
         }
+        created_partners = ''
+        
         logger.info("Start to import bank statement file %s", self.statement_filename)
         file_data = base64.b64decode(self.statement_file)
         stream = io.BytesIO(file_data)
@@ -101,6 +105,11 @@ class AccountPaymentImportBank(models.TransientModel):
         index=0  # used to create the squence for transaction 
         fee_account = self.env['account.account'].search([('name','ilike','Cheltuieli cu serviciile bancare'),('code','ilike','6270')],limit=1)
         interest_account =  self.env['account.account'].search([('name','ilike','Venituri din dobânzi'),('code','ilike','7660')],limit=1)
+
+        # unpayed_sale_orders = self.env['sale.order'].search([('state','=','sale')])
+        # unpayed_invoices_orders
+        
+# parsing the obtain values in dictionay to payments        
         for val in values:
             uniqueid = val['bank_tranzaction_uniqueid']
             this_date = val['date'].replace('-','')
@@ -115,23 +124,42 @@ class AccountPaymentImportBank(models.TransientModel):
 
             desc = val['original_description'].lower()
             out = val['payment_type'] == 'outbound' 
-            val['separated_description'] = desc.replace(';',"\n")
-#            print(val['separated_description'] +"\n***************88")
+            separated_description = desc.split(';')   # [0] operatie [1] user_description [2] ? [3] nume partner  [4] cont de unde au venit (nu in format iban) [5] swift banca
+            val['separated_description'] = "\n".join(separated_description)
             if out: # out transaction
-                if ('comision procesare' in desc or 'taxa rapoarte tranzactii' in desc or 'ota contabila individuala' in desc or 'nota contabila individuala' in desc) : 
+                if ('comision procesare' in separated_description[0] or 'taxa rapoarte tranzactii' in separated_description[0] or 'ota contabila individuala' in separated_description[0] or 'nota contabila individuala' in separated_description[0]) : 
                     val['is_bank_fee'] = True
                     val['line_ids'] = [(0,0,{'account_id':fee_account.id,'debit':val['amount']}),(0,0,{'account_id':self.journal_id.default_account_id.id,'credit':val['amount']})]
                 elif 'retragere de numerar'  in desc:
                     val['is_internal_transfer'] = True
                     val['transfer_journal_id'] = self.env['account.journal'].search([('type','=','cache')],limit=1)
             else: # are in transaction  + transactions
-                if  'nota contabila individuala' in desc: 
+                if  'nota contabila individuala' in separated_description[0]: 
                     val['is_bank_interest'] = True
                     val['move_id'] = [ (0,0, {'move_line_ids':
                         [(0,0,{'account_id':interest_account.id,'credit':val['amount'],'currency_id':self.journal_id.currency_id.id}),
                          (0,0,{'account_id':self.journal_id.default_account_id.id,'debit':val['amount'], 'currency_id':self.journal_id.currency_id.id})]
                         })]
-            
+                elif 'incasare' in separated_description[0]:
+                    val['bank_partner_account'] = ''
+                    if len(separated_description)>=4 and separated_description[4]:
+                        val['bank_partner_account'] = separated_description[4]
+# 0. search for known invoice nr /sale order... in description 
+# 1. search for partner name to be like that from payment
+                    payment_partner = self.env['res.partner'].search([('name','=',separated_description[3])],limit=1)
+#2. search for last payment form the same account  and give the same partner
+                    if not payment_partner:
+                        if val['bank_partner_account']:
+                            payment_partner = self.env['account.payment'].search([('bank_partner_account','=',val['bank_partner_account'])], order="id desc", limit=1).parnter_id
+#3. if no partner, we are going to put on default partner for unknown payments                         
+                    if not payment_partner:
+                        payment_partner =   self.env.ref('bank_import_csv.default_partner_for_unknow_payments', raise_if_not_found=False)
+                    if not payment_partner:
+                        raise UserError("Could not find the default partner for unrecognised payment partner  (with id default_partner_for_unknow_payments). Reinstall the module 'bank_import_csv' to work")
+                    val['partner_id'] = payment_partner.id
+                        
+                    
+                        
             if uniqueid:
                 same_payment = Payment.search([('bank_tranzaction_uniqueid','=',uniqueid),('state','!=','cancel')])
                 if same_payment:
@@ -153,64 +181,32 @@ class AccountPaymentImportBank(models.TransientModel):
             for res in result['written_payments_ids']:
                 pass
                 #res[1].action_post()
-            for res in result['not_written_payments_ids']:
+            for res in result['not_written_payments_ids'] + result['modified_payments_ids']:
                 if res[0].state == 'draft':
                     pass
-#                    res[0].action_post()
-        print(f"result['written_payments_ids']:{result['written_payments_ids']}")
-        print(f"result['not_written_payments_ids']:{result['not_written_payments_ids']}")
-        print(f"result['error_payments_ids']:{result['error_payments_ids']}")
+                    #res[0].action_post()
+
         t1 = '\n'.join([str(x) for x in result['written_payments_ids']])
-        t2 = '\n'.join([str(x) for x in result['not_written_payments_ids']])
-        t3 = '\n'.join([str(x) for x in result['error_payments_ids']])
+        t2 = '\n'.join([str(x) for x in result['modified_payments_ids']])
+        t3 = '\n'.join([str(x) for x in result['not_written_payments_ids']])
+        t4 = '\n'.join([str(x) for x in result['error_payments_ids']])
         return {'name':'some name',
                 'view_type': 'form', 'view_mode': 'form',
-                'res_model': "result.wizard",   'domain': [],  'context': {"default_text1":f"result['written_payments_ids']:\n{t1}",
-                                                                           "default_text2":f"result['not_written_payments_ids']:{t2}",
-                                                                            "default_text3":f"result['error_payments_ids']:{t3}",    }, 
+                'res_model': "result.wizard",   'domain': [],  'context': {"default_text1":f"written_payments_ids:\n{t1}",
+                                                                           "default_text2":f"modified_payments_ids:\n{t2}",
+                                                                           "default_text3":f"not_written_payments_ids\n:{t3}",
+                                                                            "default_text4":f"error_payments_ids\n:{t4}",    }, 
                 'type': 'ir.actions.act_window',  
                 'target': 'new'
             
             }
-        
-
-        # self.env["ir.attachment"].create(self._prepare_create_attachment(result))
-        # if self.env.context.get("return_regular_interface_action"):
-            # action = (
-                # self.env.ref("account.action_bank_statement_tree").sudo().read([])[0]
-            # )
-            # if len(result["statement_ids"]) == 1:
-                # action.update(
-                    # {
-                        # "view_mode": "form,tree",
-                        # "views": False,
-                        # "res_id": result["statement_ids"][0],
-                    # }
-                # )
-            # else:
-                # action["domain"] = [("id", "in", result["statement_ids"])]
-        # else:
-            # # dispatch to reconciliation interface
-            # lines = self.env["account.bank.statement.line"].search(
-                # [("statement_id", "in", result["statement_ids"])]
-            # )
-            # action = {
-                # "type": "ir.actions.client",
-                # "tag": "bank_statement_reconciliation_view",
-                # "context": {
-                    # "statement_line_ids": lines.ids,
-                    # "company_ids": self.env.user.company_ids.ids,
-                    # "notifications": result["notifications"],
-                # },
-            # }
-        # return action
-
-    def _prepare_create_attachment(self, result):
-        vals = {
-            "name": self.statement_filename,
-            # Attach to first bank statement
-            "res_id": result["statement_ids"][0],
-            "res_model": "account.bank.statement",
-            "datas": self.statement_file,
-        }
-        return vals
+#  ?? return also a file as result? or better put in another model that is going to be payments per day like bank statemet
+    # def _prepare_create_attachment(self, result):
+        # vals = {
+            # "name": self.statement_filename,
+            # # Attach to first bank statement
+            # "res_id": result["statement_ids"][0],
+            # "res_model": "account.bank.statement",
+            # "datas": self.statement_file,
+        # }
+        # return vals

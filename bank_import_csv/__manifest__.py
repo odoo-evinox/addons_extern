@@ -9,6 +9,11 @@
     
     no more invoice in_payment, no more 2 recociliation, no more same info in pyament and bank account.bank.statement.line
     no more hiden menus for statements ..
+    
+    future:
+    1. on customer to exist also payments; and a diffrence between invoices and paymetns. to view also not_payd invoices.
+    2. also to reconcile the payments with inovices
+    3. in payment list also to review = that that have as client not found clinet
 
 ''',
     'depends': ['account'],
@@ -19,6 +24,7 @@
         'views/account_payment.xml',
         'views/assets.xml',
         'security/ir.model.access.csv',
+        'data/default_partner_at_unknown_payments.xml'
     ],
     
     'qweb': [ "static/src/xml/button_after_create_payment.xml",],
