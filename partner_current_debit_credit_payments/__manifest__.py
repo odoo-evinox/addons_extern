@@ -10,6 +10,7 @@
     
     and added total_payments 
 
+    install also partner_statement from oca to view reports on partner invoices..
 ''',
     'depends': ['account',
                 'purchase', # only to put total_bills in same vendor bills button
