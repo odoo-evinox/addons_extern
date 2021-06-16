@@ -25,7 +25,6 @@
         "views/stock_location_view.xml",
         "views/stock_picking_view.xml",
         "views/base_comment_template_view.xml",
-        "data/default_partner_at_unknown_payments.xml",
         #             "report/stock_picking_report_valued.xml",
         "report/report_picking.xml",
     ],

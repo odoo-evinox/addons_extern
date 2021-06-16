@@ -1,13 +1,15 @@
 <odoo>
-    <record id="view_stock_picking_form" model="ir.ui.view">
-        <field name="name">view_stock_picking_form</field>
-        <field name="model">stock.picking</field>
-        <field name="inherit_id" ref="stock.view_picking_form" />
+    <record id="view_order_form" model="ir.ui.view">
+        <field name="name">view_order_form</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form" />
         <field name="priority" eval="1000"/>
         <field name="arch" type="xml">
-            <button name="button_validate" position="after">
-                <button name="button_validate_with_backorder" attrs="{'invisible': ['|', ('state', 'not in', ('waiting', 'confirmed')), ('show_validate', '=', False)]}" string="Validate with Backorder" type="object" groups="stock.group_stock_user" />
-            </button>
+            <field name="payment_term_id" position="after">
+                <field name="difference_between_order_and_deliverd"/>
+                <field name="paid_more"/>
+                <field name="paid_less"/>
+            </field>
 
         </field>
     </record>
