@@ -14,18 +14,16 @@
 
     """,
     "depends": [
-        "stock",
+        "sale_stock",
         "purchase_stock",
-        "sale",
         "l10n_ro_stock",
         "base_comment_template",  # you can take it from here https://github.com/OCA/reporting-engine.git
     ],
     "data": [
         "data/l10n_ro_stock_picking_comment_template.xml",
-        "views/stock_location_view.xml",
         "views/stock_picking_view.xml",
         "views/base_comment_template_view.xml",
-        #             "report/stock_picking_report_valued.xml",
+        "report/stock_picking_report_valued.xml",
         "report/report_picking.xml",
     ],
     "license": "AGPL-3",

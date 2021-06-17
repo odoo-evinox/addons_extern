@@ -10,39 +10,30 @@ class stock_picking(models.Model):
     _inherit = ["stock.picking", "comment.template"]
     _name = "stock.picking"
 
-    purchase_id = fields.Many2one(
-        "purchase.order", readonly=1, string="Created by this purchase"
-    )
-
     delegate_id = fields.Many2one("res.partner", string="Delegate")
     mean_transp = fields.Char(string="Mean transport")
-
-    installed_stock_picking_report_valued = fields.Boolean(
-        compute="_compute_installed_stock_picking_report_valued", compute_sudo=True
+    purchase_id = fields.Many2one('purchase.order', readonly=1,
+                                  string="Created by this purchase")
+    currency_id = fields.Many2one(
+        # related="sale_id.currency_id",
+        compute="_compute_amount_all",
+        readonly=True,
+        string="Currency",
+        related_sudo=True,
     )
+    is_internal_consumption = fields.Boolean(compute="_compute_is_internal_consumption")
+    total_internal_consumption = fields.Float(compute="_compute_total_internal_consumption")
 
-    show_shop_price = fields.Boolean(
-        compute="_compute_installed_stock_picking_report_valued", compute_sudo=True
-    )
+    def _compute_total_internal_consumption(self):
+        for pick in self:
+            pick.total_internal_consumption = sum([mvl.subtotal_internal_consumption for mvl in pick.move_line_ids])
 
-    def _compute_installed_stock_picking_report_valued(self):
-        stock_piging_report_valued = self.env["ir.module.module"].search(
-            [("name", "=", "stock_picking_report_valued")]
-        )
-        if stock_piging_report_valued.filtered(lambda r: r.state == "installed"):
-            self.installed_stock_picking_report_valued = True
-            for record in self:
-                if (
-                    record.purchase_id
-                    and record.location_dest_id.merchandise_type == "shop"
-                ):
-                    record.show_shop_price = True
-                else:
-                    record.show_shop_price = False
-        else:
-            self.installed_stock_picking_report_valued = False
-            self.show_shop_price = False
-
+    def _compute_is_internal_consumption(self):
+        for pick in self:
+            pick.is_internal_consumption = pick.move_lines and \
+                                           (pick.move_lines[0]._is_internal_transfer() or \
+                                            pick.move_lines[0]._is_consumption() or \
+                                            pick.move_lines[0]._is_consumption_return())
     @api.onchange("delegate_id")
     def on_change_delegate_id(self):
         if self.delegate_id:
@@ -54,13 +45,49 @@ class stock_picking(models.Model):
         delegate_id = vals.get("delegate_id", False)
         if mean_transp and delegate_id:
             if (
-                mean_transp
-                != self.env["res.partner"].sudo().browse(delegate_id).mean_transp
+                    mean_transp
+                    != self.env["res.partner"].sudo().browse(delegate_id).mean_transp
             ):
                 self.env["res.partner"].sudo().browse(delegate_id).write(
                     {"mean_transp": mean_transp}
                 )
         return super().write(vals)
+
+    def _compute_amount_all(self):
+        """overwrite of function from stock_picking to take into account also the purchase
+        This is computed with sudo for avoiding problems if you don't have
+        access to sales orders (stricter warehouse users, inter-company
+        records...).
+        """
+        for pick in self:
+            if pick.sale_id:
+                pick.currency_id = pick.sale_id.currency_id
+                super()._compute_amount_all()
+            else:
+                pick.currency_id = pick.purchase_id.currency_id.id if pick.purchase_id else pick.company_id.currency_id.id
+                round_curr = pick.purchase_id.currency_id.round
+                amount_tax = 0.0
+                for tax_group in pick.get_taxes_values_purchase().values():
+                    amount_tax += round_curr(tax_group["amount"])
+                amount_untaxed = sum([l.purchase_price_subtotal for l in pick.move_line_ids])
+                pick.update({  # "currency_id":
+                    "amount_untaxed": amount_untaxed,
+                    "amount_tax": amount_tax,
+                    "amount_total": amount_untaxed + amount_tax, })
+
+    def get_taxes_values_purchase(self):
+        tax_grouped = {}
+        for line in self.move_line_ids:
+            for tax in line.purchase_line.taxes_id:
+                tax_id = tax.id
+                if tax_id not in tax_grouped:
+                    tax_grouped[tax_id] = {"base": line.purchase_price_subtotal, "tax": tax}
+                else:
+                    tax_grouped[tax_id]["base"] += line.purchase_price_subtotal
+        for tax_id, tax_group in tax_grouped.items():
+            tax_grouped[tax_id]["amount"] = tax_group["tax"].compute_all(
+                tax_group["base"], self.purchase_id.currency_id)["taxes"][0]["amount"]
+        return tax_grouped
 
     # this function if from base_comment_template original made by nexterp but was removed, and also position is now selection
     def get_comment_template(
@@ -78,7 +105,9 @@ class stock_picking(models.Model):
             ("position", "=", position),
         ]
         lang = False
-        if partner_id and "partner_id" in self._fields:
+        if self.picking_type_code != 'outgoing':
+            lang = self.env.user.lang
+        elif partner_id and "partner_id" in self._fields:
             default_dom += [
                 "|",
                 ("partner_ids", "=", False),

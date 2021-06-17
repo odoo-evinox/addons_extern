@@ -11,11 +11,15 @@
        </xpath>
     </template>
 
+    <template id="report_deliveryslip"
+              inherit_id="stock.report_deliveryslip">
+        <xpath expr="//t[@t-foreach='docs']" position="replace">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="lang" t-value="user.sudo().lang if o.picking_type_code != 'outgoing' else o.partner_id.lang"/>
+                <t t-call="stock.report_delivery_document" t-lang="lang"/>
+            </t>
+        </xpath>
+    </template>
 
-<!-- add file name based on picking_type. before all of them were Delivery Slip -->
-        <record id="stock.action_report_delivery" model="ir.actions.report">
-            <field name="report_type">qweb-pdf</field> <!--qweb-html-->
-            <field name="print_report_name">'%s Slip - %s - %s' % (object.picking_type_code, object.partner_id.name or '', object.name)</field>
-        </record>
 
 </odoo>

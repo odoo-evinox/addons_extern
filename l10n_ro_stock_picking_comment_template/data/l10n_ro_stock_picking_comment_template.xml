@@ -7,11 +7,11 @@
         <field name="name">Romania - Comment for Delivery + Internal Transfer Before Lines</field>
         <field name="position">before_lines</field>
         <field name="model_ids"  eval="[(6, 0,  [ref('stock.model_stock_picking')]) ]"/>
-        <field name="domain">[['location_dest_id.usage','not in',['production']],'|',['picking_type_code', '=', 'outgoing'],['picking_type_code', '=', 'internal']]</field>
+        <field name="domain">[['location_dest_id.usage','not in',['consume','production']],'|',['picking_type_code', '=', 'outgoing'],['picking_type_code', '=', 'internal']]</field>
         <field name="text"><![CDATA[
-                            <p>
+                            <h2>
                                 <span>Delivery Order</span>
-                            </p>
+                            </h2>
                             % if object.picking_type_code == 'internal':
 
                                 <table class="table table-condensed">
@@ -46,7 +46,7 @@
         <field name="position">after_lines</field>
         <field name="model_ids"  eval="[(6, 0,  [ref('stock.model_stock_picking')]) ]"   />
         <field  name="domain"
-     >[['location_dest_id.usage','not in',['production','internal']],'|',['picking_type_code', '=', 'outgoing'],['picking_type_code', '=', 'internal']]</field>
+     >[['location_dest_id.usage','not in',['consume','production','internal']],'|',['picking_type_code', '=', 'outgoing'],['picking_type_code', '=', 'internal']]</field>
         <field
             name="text"
         ><![CDATA[
@@ -86,7 +86,7 @@
         <field name="model_ids"  eval="[(6, 0,  [ref('stock.model_stock_picking')]) ]"   />
         <field name="domain">[['picking_type_code', '=', 'incoming']]</field>
         <field name="text" ><![CDATA[
-            <p> <span>RECEPTION NOTE AND DIFFERENCES</span></p>
+            <h2><span>Reception Note and Differences</span></h2>
             <span>The undersigned, members of the reception commission, I received the material values provided by:
             ${object.partner_id.name},
             delegate: ${object.delegate_id.name if object.delegate_id else '.'*60 },
@@ -149,12 +149,12 @@
         <field name="name">Romania - Comment for Consume Voucher Before Lines</field>
         <field name="position">before_lines</field>
         <field name="model_ids"  eval="[(6, 0,  [ref('stock.model_stock_picking')]) ]"   />
-        <field name="domain">[['location_id.usage','=','internal'],['location_dest_id.usage','=','production'] ]</field>
+        <field name="domain">[['location_id.usage','=','internal'],['location_dest_id.usage','in',['consume','production']]]</field>
        <!-- ['location_id.usage','=','internal'], -->
         <field name="text"><![CDATA[
-            <p>
-                <span>CONSUME VOUCHER</span>
-            </p>
+            <h2>
+                <span>Consume Voucher</span>
+            </h2>
             ]]>
         </field>
     </record>
@@ -162,7 +162,7 @@
         <field name="name">Romania - Comment for Consume Voucher After Lines</field>
         <field name="position">after_lines</field>
         <field name="model_ids"  eval="[(6, 0,  [ref('stock.model_stock_picking')]) ]"   />
-        <field name="domain">[['location_id.usage','=','internal'],['location_dest_id.usage','=','production'] ]</field>
+        <field name="domain">[['location_id.usage','=','internal'],['location_dest_id.usage','in',['consume','production']]]</field>
         <field name="text"><![CDATA[
             <p>
                 <br/>
@@ -172,7 +172,7 @@
                     <tr>
                         <th width="40%">Elaborate</th>
                         <th width="40%">Giver signature</th>
-                        <th width="20%">Receiver signature</th>
+                        <th width="20%">Date</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -189,42 +189,6 @@
         </field>
     </record>
 
-<!-- -              Internal transfer   location_id&location_dest_id.usage == "internal" -->
-<!--
-
-case in l10n_ro_picking_delivery_internTransfer
-
-    <record id="l10n_ro_picking_internTransfer_up" model="base.comment.template">
-        <field name="name">Romania - Comment for Internal Transfer Before Lines</field>
-        <field name="position">before_lines</field>
-        <field name="model_ids"  eval="[(6, 0,  [ref('stock.model_stock_picking')]) ]"   />
-        <field name="domain">[['location_id.usage','=','internal'],['location_dest_id.usage','=','internal'] ]</field>
-        <field name="text"><![CDATA[
-                            <table class="table table-condensed">
-                                <thead>
-                                    <tr>
-                                        <th>
-                                            Source Location
-                                        </th>
-                                        <th>
-                                            Destination Location
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            ${object.location_id.name}
-                                        </td>
-                                        <td>
-                                            ${object.location_dest_id.name}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-            ]]>
-        </field>
-    </record>-->
     <record id="l10n_ro_picking_internTransfer_down" model="base.comment.template">
         <field name="name">Romania - Comment for Internal Transfer Voucher After Lines</field>
         <field name="position">after_lines</field>
