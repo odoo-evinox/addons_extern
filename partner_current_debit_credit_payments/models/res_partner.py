@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import fields, models, api
 
 
 class ResPartner(models.Model):
@@ -9,6 +9,59 @@ class ResPartner(models.Model):
         groups='account.group_account_invoice,account.group_account_readonly')
     total_bills = fields.Monetary(compute='_bills_total', string="Total Bills",
         groups='account.group_account_invoice,account.group_account_readonly')
+
+    credit_all_children = fields.Monetary(compute='_credit_debit_all_children', string='Total Receivable on all children', help="Total amount this customer owes you on all companies contacts under it (only first child).")
+    debit_all_children = fields.Monetary(compute='_credit_debit_all_children', string='Total Payable on all children', help="Total amount this customer owes you on all companies contacts under it (only first child).")
+
+    def return_parent_or_self(self):
+        self.ensure_one()
+        if self.parent_id:
+            return self.parent_id.return_parent_or_self()
+        else:
+            return self
+
+    @api.depends_context('company')
+    def _credit_debit_all_children(self):
+        tables, where_clause, where_params = self.env['account.move.line'].with_context(state='posted', company_id=self.env.company.id)._query_get()
+
+        all_partners_and_children = {}
+        all_partner_ids = []
+        all_partners_and_children_values ={}
+        child_to_partner = {}
+        for partner in self.filtered('id'):
+            all_partners_and_children[partner] = self.with_context(active_test=False).search([('id', 'child_of', partner.id)]).ids
+            for child in all_partners_and_children[partner]:
+                child_to_partner[child] = partner
+            all_partner_ids += all_partners_and_children[partner]       
+            all_partners_and_children_values[partner] = {'debit':0,'credit':0}
+
+
+        # ORGINAL where_params = [tuple(self.ids)] + where_params
+        where_params = [tuple(all_partner_ids)] + where_params
+
+        if where_clause:
+            where_clause = 'AND ' + where_clause
+        self._cr.execute("""SELECT account_move_line.partner_id, act.type, SUM(account_move_line.amount_residual)
+                      FROM """ + tables + """
+                      LEFT JOIN account_account a ON (account_move_line.account_id=a.id)
+                      LEFT JOIN account_account_type act ON (a.user_type_id=act.id)
+                      WHERE act.type IN ('receivable','payable')
+                      AND account_move_line.partner_id IN %s
+                      AND account_move_line.reconciled IS NOT TRUE
+                      """ + where_clause + """
+                      GROUP BY account_move_line.partner_id, act.type
+                      """, where_params)
+        for pid, type, val in self._cr.fetchall():
+            if type == 'receivable':
+                all_partners_and_children_values[child_to_partner[pid]]['credit']+=val
+            elif type == 'payable':
+                all_partners_and_children_values[child_to_partner[pid]]['debit']-=val
+        for partner in all_partners_and_children_values:
+            partner.credit_all_children =  all_partners_and_children_values[partner]['credit']
+            partner.debit_all_children =  all_partners_and_children_values[partner]['debit']
+            
+            
+
 
     def _payment_total(self):
         self.total_payments = 0

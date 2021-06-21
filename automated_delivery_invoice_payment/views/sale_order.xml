@@ -13,4 +13,20 @@
 
         </field>
     </record>
+
+    <record id="view_sales_order_filter" model="ir.ui.view">
+        <field name="name">.view_sales_order_filter</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter" />
+        <field name="priority" eval="1000"/>
+        <field name="arch" type="xml">
+                <xpath expr="//filter[@name='my_sale_orders_filter']" position="after">
+                    <separator/>
+                    <filter string="difference_between_order_and_deliverd" name="difference_between_order_and_deliverd" domain="[('difference_between_order_and_deliverd','=',True)]"/>
+                </xpath>
+        </field>
+    </record>
+
+
+
 </odoo>
