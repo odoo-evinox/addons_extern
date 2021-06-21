@@ -1,5 +1,5 @@
 from odoo import fields, models, api
-
+from odoo.exceptions import ValidationError
 
 class ResPartner(models.Model):
     _inherit = "res.partner"
@@ -13,12 +13,24 @@ class ResPartner(models.Model):
     credit_all_children = fields.Monetary(compute='_credit_debit_all_children', string='Total Receivable on all children', help="Total amount this customer owes you on all companies contacts under it (only first child).")
     debit_all_children = fields.Monetary(compute='_credit_debit_all_children', string='Total Payable on all children', help="Total amount this customer owes you on all companies contacts under it (only first child).")
 
+# this is to check over the limit
     def return_parent_or_self(self):
         self.ensure_one()
         if self.parent_id:
             return self.parent_id.return_parent_or_self()
         else:
             return self
+        
+    def check_over_credit_limit(self,with_this_sum=0):
+        self.ensure_one()
+        parent_or_self = self.return_parent_or_self()
+        if parent_or_self.credit_limit >0 and with_this_sum>0:
+            credit_all_children = parent_or_self.credit_all_children
+            debit_all_children = parent_or_self.debit_all_children
+            future_credit = with_this_sum + credit_all_children - debit_all_children
+            if parent_or_self.credit_limit < future_credit:
+                    raise ValidationError(f"You can not validate this invoice because the partner={parent_or_self.name} has a credit limit of {parent_or_self.credit_limit}; credit_all_children={credit_all_children}, debit_on_all_children={debit_all_children} and with this invoice/sale_order is going to have {future_credit}")
+#/this is to check over the limit
 
     @api.depends_context('company')
     def _credit_debit_all_children(self):

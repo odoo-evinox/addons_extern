@@ -13,7 +13,10 @@
     install also partner_statement from oca to view reports on partner invoices..
     
     0.2  added credit limit. You can not invoice a partner if will pass the credit limit.
-    will give error also at sale order ( working also on website sale)
+    will give error also at sale order at writing a status of ['sent','done','sale']
+    
+    
+    !!!not woking in webiste sale gives error; must be put as error at payment acquiere
     
 ''',
     'depends': ['account',
