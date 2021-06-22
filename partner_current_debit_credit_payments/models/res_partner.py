@@ -13,6 +13,9 @@ class ResPartner(models.Model):
     credit_all_children = fields.Monetary(compute='_credit_debit_all_children', string='Total Receivable on all children', help="Total amount this customer owes you on all companies contacts under it (only first child).")
     debit_all_children = fields.Monetary(compute='_credit_debit_all_children', string='Total Payable on all children', help="Total amount this customer owes you on all companies contacts under it (only first child).")
 
+# just add tracking on this field defined in base
+    credit_limit = fields.Float(tracking=1)
+
 # this is to check over the limit
     def return_parent_or_self(self):
         self.ensure_one()
@@ -29,7 +32,7 @@ class ResPartner(models.Model):
             debit_all_children = parent_or_self.debit_all_children
             future_credit = with_this_sum + credit_all_children - debit_all_children
             if parent_or_self.credit_limit < future_credit:
-                    raise ValidationError(f"You can not validate this invoice because the partner={parent_or_self.name} has a credit limit of {parent_or_self.credit_limit}; credit_all_children={credit_all_children}, debit_on_all_children={debit_all_children} and with this invoice/sale_order is going to have {future_credit}")
+                    raise ValidationError(f"You can not validate this sale order/invoice because the partner={parent_or_self.name} has a credit limit of {parent_or_self.credit_limit:.2f}; credit_all_children={credit_all_children:.2f}, debit_on_all_children={debit_all_children:.2f} and with this invoice/sale_order is going to have {future_credit:.2f}")
 #/this is to check over the limit
 
     @api.depends_context('company')
@@ -47,8 +50,6 @@ class ResPartner(models.Model):
             all_partner_ids += all_partners_and_children[partner]       
             all_partners_and_children_values[partner] = {'debit':0,'credit':0}
 
-
-        # ORGINAL where_params = [tuple(self.ids)] + where_params
         where_params = [tuple(all_partner_ids)] + where_params
 
         if where_clause:

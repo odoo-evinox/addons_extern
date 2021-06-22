@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="pyament_token_on_credit" name="pyament_token_on_credit" inherit_id="payment.payment_tokens_list">
+        <xpath expr="//div[hasclass('o_payment_acquirer_select')]" position="inside">
+            <t t-if="on_credit_acquiers_reason[acq]!=''"><span class="text-danger" t-esc="on_credit_acquiers_reason[acq]"/></t>
+        </xpath>        
+
+        <xpath expr="//div[hasclass('o_payment_acquirer_select')]" position="attributes">
+             <attribute name="class"></attribute>
+              <attribute name="t-att-class">'card-body o_payment_acquirer_select'   if (on_credit_acquiers_reason[acq]=='')  else 'card-body' </attribute>
+        </xpath>
+        
+        
+        <xpath expr="//input[@t-att-data-form-payment='true']" position="replace">
+              <t t-if="on_credit_acquiers_reason[acq]!=''">
+                <input type="radio" t-att-data-acquirer-id="acq.id" disabled="disabled"  t-att-data-form-payment="true" t-att-data-provider="acq.provider" t-att-class="'d-none' if (acquirers_count==1 and pms_count==0) else ''" name="pm_id" t-attf-value="form_{{acq.id}}" />
+              </t>  
+              <t t-else="on_credit_acquiers_reason[acq]!=''">
+                <input type="radio" t-att-data-acquirer-id="acq.id"  t-att-data-form-payment="true" t-att-data-provider="acq.provider" t-att-class="'d-none' if (acquirers_count==1 and pms_count==0) else ''" name="pm_id" t-attf-value="form_{{acq.id}}" t-att-checked="acquirers_count==1 and pms_count==0 or acquirers[0] == acq"/>
+             </t>          
+       </xpath>
+        
+    </template>
+</odoo>

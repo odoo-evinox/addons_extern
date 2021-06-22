@@ -1,0 +1,17 @@
+<odoo>
+    
+      <record id="transaction_form" model="ir.ui.view">
+        <field name="name">transaction_form</field>
+        <field name="model">payment.transaction</field>
+        <field name="inherit_id" ref="payment.transaction_form"/> 
+        <field name="priority">1600</field>
+        <field name="arch" type="xml">
+            <field name="provider" position="attributes">
+                 <attribute name="invisible" eval="0"/>
+             </field>
+             <field name="provider" position="after">
+                <field name="payment_id"/>
+             </field>
+        </field>
+    </record>   
+</odoo>
