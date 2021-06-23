@@ -16,8 +16,10 @@
 
                 ],
     'data': [
+        'views/payment_transfer_templates.xml',
         'views/payment.xml',
         'views/templates.xml',
+        'data/payment_acquirer_data.xml',
      ],
     'installable': True,
     'auto_install': True,

@@ -2,6 +2,8 @@ from odoo import http, _
 from odoo.http import request
 from odoo.addons.website_sale.controllers.main import WebsiteSale
 from odoo.exceptions import UserError
+import pprint
+import werkzeug
 import logging
 _logger = logging.getLogger(__name__)
 
@@ -30,3 +32,15 @@ class WebsiteSalePaymentOnCredit(WebsiteSale):
         else: # partner does not have credit_limit so we are not going to show payment acquier type on_credit
             values['acquirers']  = not_on_credit_acq
         return values
+
+
+class OnPaymentController(http.Controller):
+    _accept_url = '/payment/on_credit/feedback'
+
+    @http.route([
+        '/payment/on_credit/feedback',
+    ], type='http', auth='public', csrf=False)
+    def transfer_form_feedback(self, **post):
+        _logger.info('Beginning form_feedback with post data %s', pprint.pformat(post))  # debug
+        request.env['payment.transaction'].sudo().form_feedback(post, 'on_credit')
+        return werkzeug.utils.redirect('/payment/process')

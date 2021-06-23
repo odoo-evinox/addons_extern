@@ -32,7 +32,7 @@ class ResPartner(models.Model):
             debit_all_children = parent_or_self.debit_all_children
             future_credit = with_this_sum + credit_all_children - debit_all_children
             if parent_or_self.credit_limit < future_credit:
-                    raise ValidationError(f"You can not validate this sale order/invoice because the partner={parent_or_self.name} has a credit limit of {parent_or_self.credit_limit:.2f}; credit_all_children={credit_all_children:.2f}, debit_on_all_children={debit_all_children:.2f} and with this invoice/sale_order is going to have {future_credit:.2f}")
+                    raise ValidationError(f"You can not validate this sale order/invoice because the partner={parent_or_self.name} has a credit limit of {parent_or_self.credit_limit:.2f}; credit_all_children={credit_all_children:.2f}, debit_on_all_children={debit_all_children:.2f} and with this invoice/sale_order is going to have {future_credit:.2f} (without transport taxes)")
 #/this is to check over the limit
 
     @api.depends_context('company')

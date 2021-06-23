@@ -20,11 +20,11 @@
             <group  name="accounting_entries" position="after">
                     <group string="Accounting Entries" name="accounting_entries" help="It has values only for a partners that does not have a parent" groups="account.group_account_readonly">
                         <field name="currency_id" invisible="1"/>
-                        <field name="debit"/>
-                        <field name="credit"/>
-                        <field name="has_unreconciled_entries"/>
                         <field name="credit_all_children"/>
+                        <field name="credit"/>
                          <field name="debit_all_children"/>
+                        <field name="debit"/>
+                        <field name="has_unreconciled_entries"/>
                         
                     </group>
             </group>
