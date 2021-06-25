@@ -82,7 +82,7 @@
 
 
 	<template id="one_payment_receipt">
-
+	   <t t-if="oo=='is_from_print_pyament'" > <t t-set="oo" t-value="o"/> </t>
 		<table class="border " style="table-layout: fixed; width: 100%; border: 1px solid black; border-collapse: collapse; ">
 			<tr >
 				<td style="vertical-align:middle;text-align:middle;padding:2px" >
@@ -90,49 +90,49 @@
 		            <img style="height: 100%; width: 100%; display:block;object-fit: scale-down;" t-if="o.move_id.company_id.logo" t-att-src="image_data_uri(o.move_id.company_id.logo)" class="text-center" alt="Logo"/>-->
  <!--                   <img style="height: 50px; width: 368px; display:block;object-fit: scale-down;" t-if="o.move_id.company_id.logo" t-att-src="image_data_uri(o.move_id.company_id.logo)" class="text-center" alt="Logo"/>
 -->
-                   <img style="height: 50px; width: 368px; display:block;object-fit: scale-down;" t-if="o.move_id.company_id.logo" t-att-src="image_data_uri(o.move_id.company_id.logo)" class="text-center" alt="Logo"/>
+                   <img style="height: 50px; width: 368px; display:block;object-fit: scale-down;" t-if="oo.move_id.company_id.logo" t-att-src="image_data_uri(oo.move_id.company_id.logo)" class="text-center" alt="Logo"/>
 
                 </td>	
 				<td style="font-size: 18px;text-align: center;vertical-align:middle" >
                    <div>
-                        <h3 t-if="o.reconciled_invoice_ids">
+                        <h3 t-if="oo.reconciled_invoice_ids">
                             Payment Receipt
                         </h3>
-                        <strong t-if="not o.reconciled_invoice_ids and o.payment_type=='inbound'">
+                        <strong t-if="not oo.reconciled_invoice_ids and oo.payment_type=='inbound'">
                             Payment Receipt
                          </strong>
                   	</div>
                   	<div >
 						<strong>Nr:
-                                <span t-field="o.name"/>
+                                <span t-field="oo.name"/>
 						</strong>
 					</div>
 					<div>
-                            <strong>Date: <span t-field="o.date"/></strong>
+                            <strong>Date: <span t-field="oo.date"/></strong>
                     </div>
 				</td>
 				<td style="padding-top:6px;padding-right:6px;text-align:right">
-					<t t-set="part" t-value="o.move_id.company_id.partner_id"/>
+					<t t-set="part" t-value="oo.move_id.company_id.partner_id"/>
 					<t t-call="cbs_solutions_customization.partner_display_invoice"/>
 				</td>		
 			</tr>
 			<tr>
 				<td colspan="3"><br/></td>
 			</tr>
-			<tr t-if="o.partner_type!='customer' or o.move_id.journal_id.type!='cash' or o.state!='posted'">
-				<td colspan="3">This is not a customer payment OR not a journal cache account OR state is not posted. It's type=<span t-esc="o.partner_type"/>, journal_type =<span t-esc="o.move_id.journal_id.type"/>, state=<span t-esc="o.state"/>.
+			<tr t-if="oo.partner_type!='customer' or oo.move_id.journal_id.type!='cash' or oo.state!='posted'">
+				<td colspan="3">This is not a customer payment OR not a journal cache account OR state is not posted. It's type=<span t-esc="oo.partner_type"/>, journal_type =<span t-esc="oo.move_id.journal_id.type"/>, state=<span t-esc="oo.state"/>.
 				</td>
 			</tr>
 			
 			<tr t-else="">
 				<td colspan="2" style="padding-left:6px;padding-bottom:6px;" >
-                        <span>We received from: <strong><span t-field="o.partner_id.name"/>, </strong>with address: </span>
+                        <span>We received from: <strong><span t-field="oo.partner_id.name"/>, </strong>with address: </span>
                             
-           <span t-field="o.partner_id.street" />
-                            <t t-if="o.partner_id.street2"  ><span t-field="o.partner_id.street2"/></t>
-                            <t t-if="o.partner_id.city_id" ><span t-field="o.partner_id.city_id.name" /></t>
-                            <t t-if="not o.partner_id.city_id" >
-                                <t t-if="o.partner_id.city"><span t-field="o.partner_id.city" /></t>
+           <span t-field="oo.partner_id.street" />
+                            <t t-if="oo.partner_id.street2"  ><span t-field="oo.partner_id.street2"/></t>
+                            <t t-if="oo.partner_id.city_id" ><span t-field="oo.partner_id.city_id.name" /></t>
+                            <t t-if="not oo.partner_id.city_id" >
+                                <t t-if="oo.partner_id.city"><span t-field="oo.partner_id.city" /></t>
                             </t>
                             <span>State:</span><span t-field="o.partner_id.state_id.name" />,
                             <span t-field="o.partner_id.country_id.name" />
@@ -160,6 +160,7 @@
 
     <template id="report_payment_1receipt_document">
             <t t-set="o" t-value="o.with_context(lang=lang)"/>
+            <t t-set="oo" t-value="o"/> 
             <div class="page">
             	<t t-call="cbs_solutions_customization.one_payment_receipt" />
             </div>
@@ -167,6 +168,7 @@
 
     <template id="report_payment_2receipt_document">
             <t t-set="o" t-value="o.with_context(lang=lang)"/>
+            <t t-set="oo" t-value="o"/> 
             <div class="page">
             	<t t-call="cbs_solutions_customization.one_payment_receipt" />
             	<br/> <br/>  <br/>   

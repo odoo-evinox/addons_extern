@@ -21,6 +21,6 @@
 
          "report/report_payment_receipt_templates.xml",
          
-         "report/invoice_width_payment_receipt.xml",
+         "report/invoice_with_payment_receipt.xml",
     ],
 }
