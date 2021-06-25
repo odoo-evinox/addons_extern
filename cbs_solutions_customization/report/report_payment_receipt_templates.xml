@@ -1,86 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <template id="one_payment_receipt_for_invoice">  <!-- de ce dracu am mai facut asta cand trebuia sa pun chitanta normala? -->
-
-        <table class="border " style="table-layout: fixed; width: 100%; border: 1px solid black; border-collapse: collapse; ">
-            <tr >
-                <td style="vertical-align:middle;text-align:middle;padding:2px" >
-                <!--object-fit: scale-down; not working in htmltopdf  
-                    <img style="height: 100%; width: 100%; display:block;object-fit: scale-down;" t-if="o.move_id.company_id.logo" t-att-src="image_data_uri(o.move_id.company_id.logo)" class="text-center" alt="Logo"/>-->
- <!--                   <img style="height: 50px; width: 368px; display:block;object-fit: scale-down;" t-if="o.move_id.company_id.logo" t-att-src="image_data_uri(o.move_id.company_id.logo)" class="text-center" alt="Logo"/>
--->
-                   <img style="height: 50px; width: 368px; display:block;object-fit: scale-down;" t-if="o.cache_receipt_id.move_id.company_id.logo" t-att-src="image_data_uri(o.cache_receipt_id.move_id.company_id.logo)" class="text-center" alt="Logo"/>
-
-                </td>   
-                <td style="font-size: 18px;text-align: center;vertical-align:middle" >
-                   <div>
-                        <h3 t-if="o.cache_receipt_id.reconciled_invoice_ids">
-                            Payment Receipt
-                        </h3>
-                        <strong t-if="not o.cache_receipt_id.reconciled_invoice_ids and o.cache_receipt_id.payment_type=='inbound'">
-                            Payment Receipt
-                         </strong>
-                    </div>
-                    <div >
-                        <strong>Nr:
-                                <span t-field="o.cache_receipt_id.name"/>
-                        </strong>
-                    </div>
-                    <div>
-                            <strong>Date: <span t-field="o.cache_receipt_id.date"/></strong>
-                    </div>
-                </td>
-                <td style="padding-top:6px;padding-right:6px;text-align:right">
-                    <t t-set="part" t-value="o.cache_receipt_id.move_id.company_id.partner_id"/>
-                    <t t-call="cbs_solutions_customization.partner_display_invoice"/>
-                </td>       
-            </tr>
-            <tr>
-                <td colspan="3"><br/></td>
-            </tr>
-            <tr t-if="o.cache_receipt_id.partner_type!='customer' or o.cache_receipt_id.move_id.journal_id.type!='cash' or o.cache_receipt_id.state!='posted'">
-                <td colspan="3">This is not a customer payment OR not a journal cache account OR state is not posted. It's type=<span t-esc="o.partner_type"/>, journal_type =<span t-esc="o.move_id.journal_id.type"/>, state=<span t-esc="o.state"/>.
-                </td>
-            </tr>
-            
-            <tr t-else="">
-                <td colspan="2" style="padding-left:6px;padding-bottom:6px;" >
-                        <span>We received from: <strong><span t-field="o.cache_receipt_id.partner_id.name"/>, </strong>with address: </span>
-                            
-<!--                        <span class="company_address" t-field="o.partner_id" style="display: inline-block;"
-                              t-options='{"widget": "contact", "fields": ["address"], "no_marker": true, "no_tag_br": True}'/>,
--->           <span t-field="part.street" />
-                            <t t-if="part.street2"  ><span t-field="part.street2"/></t>
-                            <t t-if="part.city_id" ><span t-field="part.city_id.name" /></t>
-                            <t t-if="not part.city_id" >
-                                <t t-if="part.city"><span t-field="part.city" /></t>
-                            </t>
-                            <span>State:</span><span t-field="part.state_id.name" />,
-                            <span t-field="part.country_id.name" />
-                            
-
-                        <t t-if="o.cache_receipt_id.partner_id.vat"><span><t t-esc="o.cache_receipt_id.partner_id.country_id.vat_label or 'TIN'"/>: <t t-if="o.partner_id.vat"><span t-field="o.partner_id.vat"/>, </t></span>
-                        </t><t t-if="o.partner_id.nrc"><span>
-                            
-                        <span>NRC: </span><span t-field="o.cache_receipt_id.partner_id.nrc"/>, </span>
-</t><span>amount of: <strong t-field="o.cache_receipt_id.amount"
-                                  t-options="{'widget': 'monetary', 'display_currency': o.cache_receipt_id.currency_id}"/></span> (<span t-esc="o.cache_receipt_id.currency_id.amount_to_text(o.cache_receipt_id.amount)"/>)<span> for payment of: <strong t-esc="','.join(o.cache_receipt_id.reconciled_invoice_ids.mapped('name'))"/></span>
-                        .
-                </td>
-                <td style="text-align:center;vertical-align:top;padding-bottom:6px;" class="pt-2" >
-                            <strong style="text-align:center">Cashier,</strong>
- <!--                            <img t-if="user.with_context(force_company=o.company_id.id).signed_image" class="float-right"
-                                 t-att-src="'data:image/png;base64,%s' % to_text(user.with_context(force_company=o.company_id.id).signed_image)"
-                                 style="max-height: 150px;"/>
- -->
-                </td>
-            </tr>
-
-        </table>
-    </template>
-
-
 	<template id="one_payment_receipt">
 	   <t t-if="oo=='is_from_print_pyament'" > <t t-set="oo" t-value="o"/> </t>
 		<table class="border " style="table-layout: fixed; width: 100%; border: 1px solid black; border-collapse: collapse; ">
@@ -138,12 +58,12 @@
                             <span t-field="o.partner_id.country_id.name" />
                             
 
-                        <t t-if="o.partner_id.vat"><span><t t-esc="o.partner_id.country_id.vat_label or 'TIN'"/>: <t t-if="o.partner_id.vat"><span t-field="o.partner_id.vat"/>, </t></span>
-                        </t><t t-if="o.partner_id.nrc"><span>
+                        <t t-if="oo.partner_id.vat"><span><t t-esc="oo.partner_id.country_id.vat_label or 'TIN'"/>: <t t-if="oo.partner_id.vat"><span t-field="oo.partner_id.vat"/>, </t></span>
+                        </t><t t-if="oo.partner_id.nrc"><span>
                             
-                        <span>NRC: </span><span t-field="o.partner_id.nrc"/>, </span>
-</t><span>amount of: <strong t-field="o.amount"
-                                  t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></span> (<span t-esc="o.currency_id.amount_to_text(o.amount)"/>)<span> for payment of: <strong t-esc="','.join(o.reconciled_invoice_ids.mapped('name'))"/></span>
+                        <span>NRC: </span><span t-field="oo.partner_id.nrc"/>, </span>
+</t><span>amount of: <strong t-field="oo.amount"
+                                  t-options="{'widget': 'monetary', 'display_currency': oo.currency_id}"/></span> (<span t-esc="oo.currency_id.amount_to_text(oo.amount)"/>)<span> for payment of: <strong t-esc="','.join(oo.reconciled_invoice_ids.mapped('name'))"/></span>
                         .
 				</td>
 				<td style="text-align:center;vertical-align:top;padding-bottom:6px;" class="pt-2" >
@@ -177,7 +97,7 @@
             </div>
     </template>
 
-    <template id="report_payment_1receipt">  <!--   1 receipt can be multiple -->
+    <template id="report_payment_1receipt">  
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
                 <t t-set="lang" t-value="o.partner_id.lang"/>
@@ -197,7 +117,7 @@
         </t>
     </template>
 
-		<!--  overwrite orginal receipt-->
+		<!--  overwrite orginal receipt print one per page-->
     <record     id="account.action_report_payment_receipt"  model="ir.actions.report">
         <field name="name">Payment 1 Receipt</field>
          <field  name="model">account.payment</field>
@@ -209,7 +129,7 @@
             <field name="binding_type">report</field>
     </record>
 
-		<!--  receipt to print 2 invoices-->
+		<!--  receipt to print 2 receipts per same a4 page-->
         <record id="action_report_payment_2receipt" model="ir.actions.report">
             <field name="name">Payment 2 Receipt</field>
             <field name="model">account.payment</field>

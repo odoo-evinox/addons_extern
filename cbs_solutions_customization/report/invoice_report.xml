@@ -9,7 +9,7 @@
 	    <value eval="{'paperformat_id': ref('cbs_solutions_customization.paperformat_A4_cbs')}" />
 	</function>
 
-    <!-- modify the invoice to have issuer | invoice | client -->
+    <!-- modify the invoice to have header as  issuer | invoice | client -->
 	<template id="partner_display_invoice" >
 				<div  style="display: inline-block">
 		    			<div class="mt16">
@@ -60,7 +60,7 @@
 			     </div>
 	</template>
     
-    <template id="issuer_and_client" inherit_id="account.report_invoice_document">
+    <template id="report_invoice_with_header_and_payment_receipt" inherit_id="account.report_invoice_document">
 
 	   	<t t-set="address" position="replace"/>
 
@@ -115,7 +115,7 @@
           <br/>
 </xpath>
 
-<!-- at credit note put qty with -         -->
+<!-- at credit note put qty with -   at credit note put qty with -  at credit note put qty with -        -->
 
 <span t-field="line.quantity" position="before">
     <t t-if="o.move_type == 'out_refund'">-</t>
@@ -141,7 +141,7 @@
 </span>    
 
 
-<!-- if the invoice is canceled will not show lines in print -->
+<!-- if the invoice is canceled will not show lines in print   if the invoice is canceled will not show lines in print-->
 <t t-foreach="lines" position="before">
     <t t-if="o.move_type == 'out_invoice' and o.state == 'cancel'"><t t-set="lines" t-value="[]"/></t>
 </t>
@@ -164,16 +164,20 @@
     <attribute name="t-foreach">taxes</attribute>
 </t>
 
-<!-- put also the payment 
+<!-- put also the payment   put also the payment    put also the payment    put also the payment          -->
         <xpath expr="//div[@id='qrcode']" position="after">
-                <t t-if="o.cache_receipt_id">
-                    <br/> <br/>
-                    <t t-set="o" t-value="o.cache_receipt_id"/>
-                    <t  t-call="cbs_solutions_customization.one_payment_receipt"/>
-                </t>
-        </xpath>-->
-<!--
-  	    <xpath expr="//div[@t-if='o.currency_id != o.company_currency_id and o.currency_rate']" position="replace"/>
+              <p t-if="o.invoice_payment_ids">
+                    <t t-foreach="o.invoice_payment_ids.filtered(lambda x: x.journal_id.type=='cash')" t-as="oo">
+                           <br/> <br/>
+                           <t t-call="cbs_solutions_customization.one_payment_receipt"/>
+                    </t>
+            </p>  
+
+        </xpath>
+        
+         <!--           this was to put the rate on invoice but now is in l10n_ro_account_report_invoice
+        
+  <xpath expr="//div[@t-if='o.currency_id != o.company_currency_id and o.currency_rate']" position="replace"/>
 
 		<div class="row" style="margin-top: 20px;" />
         <div t-if="o.currency_id != o.company_currency_id and o.currency_rate"
@@ -188,6 +192,36 @@
 
     
 	  </template>
+
+
+    <!--
+    TO HAVE SEPARATE A REPORT ALSO WITH PRINTED INVOICE WE NEED TO 
+modify report_invoice_with_header_and_payment_receipt   to have also primary="True" ( this will not aply the modification to original report)
+ 
+    <template id="invoice_with_receipt_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs"  t-as="o">
+               <div class="article" t-att-data-oe-model="o._name" t-att-data-oe-id="o.id">
+                    <t t-set="lang" t-value="o.partner_id.lang"/>
+                    <t t-call="cbs_solutions_customization.report_invoice_with_header_and_payment_receipt" t-lang="lang"/>
+                    <br />
+                </div>
+        </t>
+        </t>
+    </template>
+    <record id="action_invoice_with_receipt_report" model="ir.actions.report">
+        <field name="name">Invoice + Receipt</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="paperformat_id" ref='cbs_solutions_customization.paperformat_A4_cbs' />
+        <field name="report_name">cbs_solutions_customization.invoice_with_receipt_report</field>
+        <field name="report_file">cbs_solutions_customization.invoice_with_receipt_report</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+    </record>
+-->
+
+
 
     </data>
 </odoo>

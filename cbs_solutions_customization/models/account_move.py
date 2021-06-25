@@ -21,33 +21,25 @@ class AccountMove(models.Model):
                 # sale_order_ids_name = ', '.join([x.name for x in sale_order_ids])
             # rec.sale_order_ids_name = sale_order_ids_name
 
-    cache_receipt_id = fields.Many2one("account.payment",compute="_compute_cache_receipt_id")
+    invoice_payment_ids = fields.Many2many("account.payment",string="Invoice account.payment", compute="_compute_invoice_payment_ids", help="the payments for this invoice (from account.payment (if a line form accont_payment has some sum matched with a line from this invoice)). The invoice can be paid also with another invoice (credit note) or with another type of accounting entry - you are not going to see this here. This is used to print the invoice with cache payments  ")
     
-    def _compute_cache_receipt_id(self):
+    def _compute_invoice_payment_ids(self):
         for rec in self:
-            if (rec.state != 'posted') or (rec.payment_state not in ['paid','in_payment']) or (
-                (rec.move_type not in ['out_invoice', 'out_refund', 'out_receipt', 'in_receipt'])):
-                rec.cache_receipt_id = False
+            if (rec.state != 'posted') :
+                rec.invoice_payment_ids = False
             else:
-                resp = json.loads(rec.invoice_payments_widget)
-                if resp.get('outstanding')==False and len(resp['content'])==1 :
-                    cache_receipt_id = resp['content'][0]['account_payment_id']
-                    cache_receipt = self.env['account.payment'].browse(cache_receipt_id)
-                    if cache_receipt.journal_id.type == 'cash':
-                        rec.cache_receipt_id = cache_receipt
-                    else:
-                        rec.cache_receipt_id = False
-                else:
-                    rec.cache_receipt_id = False    
-            # payments_widget_vals = {'title': _('Less Payment'), 'outstanding': False, 'content': []}
-            #
-            # if move.state == 'posted' and move.is_invoice(include_receipts=True):
-                # payments_widget_vals['content'] = move._get_reconciled_info_JSON_values()
-                #
-            # if payments_widget_vals['content']:
-                # move.invoice_payments_widget = json.dumps(payments_widget_vals, default=date_utils.json_default)
-            # else:
-                # move.invoice_payments_widget = json.dumps(False)
-                #
-                #
-                #
+                pay_term_lines = rec.line_ids\
+                    .filtered(lambda line: line.account_internal_type in ('receivable', 'payable'))
+                account_moves_that_are_reconciled_with_this = self.env['account.move']  # based on account_partial_reconcile   debit with credit 
+    # matched_debit_ids = fields.One2many('account.partial.reconcile', 'credit_move_id', string='Matched Debits',
+        # help='Debit journal items that are matched with this journal item.', readonly=True)
+    # matched_credit_ids = fields.One2many('account.partial.reconcile', 'debit_move_id', string='Matched Credits',
+        # help='Credit journal items that are matched with this journal item.', readonly=True)
+            
+                for partial in pay_term_lines.matched_debit_ids:
+                    account_moves_that_are_reconciled_with_this |= partial.debit_move_id.move_id
+                for partial in pay_term_lines.matched_credit_ids:
+                    account_moves_that_are_reconciled_with_this |= partial.credit_move_id.move_id
+                payments = self.env['account.payment'].search([('move_id','in',account_moves_that_are_reconciled_with_this.ids)])
+ 
+                rec.invoice_payment_ids = [(6,0,payments.ids)]
