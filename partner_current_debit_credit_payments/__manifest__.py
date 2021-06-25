@@ -16,7 +16,7 @@
     will give error also at sale order at writing a status of ['sent','done','sale']
     
     
-    !!!not woking in webiste sale gives error; must be put as error at payment acquiere
+    !!!not woking in website sale gives error; must be put as error at payment acquiere
     
 ''',
     'depends': ['account',

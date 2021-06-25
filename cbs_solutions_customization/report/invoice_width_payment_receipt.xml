@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    
+    <!-- without primary="True"  is modifing all the templates because is modifing the report_invoice_document-->
+ 	<template id="put_aso_the_cache_receipt" inherit_id="account.report_invoice_document" > <!-- primary="True" -->
+		<xpath expr="//div[@id='qrcode']" position="after">
+            	<t t-if="o.cache_receipt_id">
+            		<br/> <br/>
+            		<t t-set="o" t-value="o.cache_receipt_id"/>
+					<t	t-call="cbs_solutions_customization.one_payment_receipt_for_invoice"/>
+            	</t>
+		</xpath>
+	</template>
+	
+
+     <template id="report_invoice_with_receipt_report">
+          <!--  <t t-set="o" t-value="o.with_context(lang=lang)"/>-->
+            	<t t-call="cbs_solutions_customization.put_aso_the_cache_receipt" />
+     </template>
+ 
+    <template id="invoice_with_receipt_report">
+        <t t-call="web.html_container">
+            <t t-foreach="docs"  t-as="o">
+               <div class="article" t-att-data-oe-model="o._name" t-att-data-oe-id="o.id">
+                    <t t-set="lang" t-value="o.partner_id.lang"/>
+                    <t t-call="cbs_solutions_customization.report_invoice_with_receipt_report" t-lang="lang"/>
+                    <br />
+                </div>
+        </t>
+        </t>
+    </template>
+
+<!-- invoice_with_receipt_report -->
+    <!--    <record id="account.account_invoices" model="ir.actions.report">-->
+
+        <record id="action_invoice_with_receipt_report" model="ir.actions.report">
+            <field name="name">Invoice + Receipt</field>
+            <field name="model">account.move</field>
+            <field name="report_type">qweb-pdf</field>
+          	<field name="paperformat_id" ref='cbs_solutions_customization.paperformat_A4_cbs' />
+            <field name="report_name">cbs_solutions_customization.invoice_with_receipt_report</field>
+            <field name="report_file">cbs_solutions_customization.invoice_with_receipt_report</field>
+
+<!--            <field name="print_report_name">(object._get_report_base_filename())</field>
+            <field name="attachment">(object.state == 'posted') and ((object.name or 'INV').replace('/','_')+'.pdf')</field>
+-->
+            <field name="binding_model_id" ref="account.model_account_move"/>
+            <field name="binding_type">report</field>
+        </record>
+<!--I put them at all the invoices. If you want a separate menu this is
+--><!--            <field name="groups_id" eval="[(4, ref('account.group_account_invoice')),
+ (4, ref('account.group_account_readonly'))]"/>
+-->        
+
+    </data>
+</odoo>
