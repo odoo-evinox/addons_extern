@@ -22,7 +22,7 @@ class AccountMove(models.Model):
             # rec.sale_order_ids_name = sale_order_ids_name
 
     invoice_payment_ids = fields.Many2many("account.payment",string="Invoice account.payment", compute="_compute_invoice_payment_ids", help="the payments for this invoice (from account.payment (if a line form accont_payment has some sum matched with a line from this invoice)). The invoice can be paid also with another invoice (credit note) or with another type of accounting entry - you are not going to see this here. This is used to print the invoice with cache payments  ")
-    
+
     def _compute_invoice_payment_ids(self):
         for rec in self:
             if (rec.state != 'posted') :

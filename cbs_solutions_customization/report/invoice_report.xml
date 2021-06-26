@@ -60,9 +60,9 @@
 			     </div>
 	</template>
     
-    <template id="report_invoice_with_header_and_payment_receipt" inherit_id="account.report_invoice_document">
+    <template id="report_invoice_with_header_and_payment_receipt" priority="1000" inherit_id="account.report_invoice_document">
 
-	   	<t t-set="address" position="replace"/>
+	   	<xpath expr='//t[@t-set="address"]' position="replace"/>
 
     	<xpath expr="//div[@class='page']/h2" position="replace"/>
     	<xpath expr="//div[@id='informations']" position="replace">
