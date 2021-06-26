@@ -18,43 +18,12 @@ class OnDeliveryAcquirer(models.Model):
     def on_credit_get_form_action_url(self):
         return "/payment/on_credit/feedback"
 
-    def _format_on_credit_data(self):
-        company_id = self.env.company.id
-        # filter only bank accounts marked as visible
-        journals = self.env['account.journal'].search([('type', '=', 'bank'), ('company_id', '=', company_id)])
-        accounts = journals.mapped('bank_account_id').name_get()
-        bank_title = _('Bank Accounts') if len(accounts) > 1 else _('Bank Account')
-        bank_accounts = ''.join(['<ul>'] + ['<li>%s</li>' % name for id, name in accounts] + ['</ul>'])
-        post_msg = _('''<div>
-<h3>Your order was validated, with the payment on credit. Please pay them in term, to the following bank account</h3>
-<h4>%(bank_title)s</h4>
-%(bank_accounts)s
-<h4>Communication</h4>
-<p>Please use the order name as communication reference.</p>
-</div>''') % {
-            'bank_title': bank_title,
-            'bank_accounts': bank_accounts,
-        }
-        return post_msg
-
-    @api.model
-    def create(self, values):
-        """ Hook in create to create a default pending_msg. This is done in create
-        to have access to the name and other creation values. If no pending_msg
-        or a void pending_msg is given at creation, generate a default one. """
-        if values.get('provider') == 'on_credit' and not values.get('pending_msg'):
-            values['pending_msg'] = self._format_on_credit_data()
-        return super().create(values)
-
-    def write(self, values):
-        """ Hook in write to create a default pending_msg. See create(). """
-        if not values.get('pending_msg', False) and all(not acquirer.pending_msg and acquirer.provider != 'on_credit' for acquirer in self) and values.get('provider') == 'on_credit':
-            values['pending_msg'] = self._format_on_credit_data()
-        return super().write(values)
 
 
 class OnDeliveryTransaction(models.Model):
     _inherit = "payment.transaction"
+
+    state = fields.Selection(selection_add=[('on_credit', 'On_credit')],ondelete={"on_credit": "set default"} )
 
 
     @api.model
@@ -86,6 +55,22 @@ class OnDeliveryTransaction(models.Model):
     def _on_credit_form_validate(self, data):  # why is not getting here
         _logger.info('Validated on_credit payment for tx %s: set as pending' % (self.reference))
         self._set_transaction_authorized() 
+#        self._set_transaction_done()   # here is creating also the account_payment for bank, that is not ok.
+        allowed_states = ('draft', 'authorized', 'pending', 'error')
+        target_state = 'on_credit'
+        (tx_to_process, tx_already_processed, tx_wrong_state) = self._filter_transaction_state(allowed_states, target_state)
+        for tx in tx_already_processed:
+            _logger.info('Trying to write the same state twice on tx (ref: %s, state: %s' % (tx.reference, tx.state))
+        for tx in tx_wrong_state:
+            _logger.warning('Processed tx with abnormal state (ref: %s, target state: %s, previous state %s, expected previous states: %s)' % (tx.reference, target_state, tx.state, allowed_states))
+
+        tx_to_process.write({
+            'state': target_state,
+            'date': fields.Datetime.now(),
+            'state_message': 'This state means that the client will pay us later based on emitted invoices',
+        })
+
+        
         return True
 
         
