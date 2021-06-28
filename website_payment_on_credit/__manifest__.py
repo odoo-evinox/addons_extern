@@ -15,12 +15,15 @@
     'depends': ['payment',
                 'website_sale',
                 'partner_current_debit_credit_payments',  # to know when the partner is over credit limit  
-
+                'account_payment',
                 ],
     'data': [
-        'views/payment_transfer_templates.xml',
+       'views/payment_transfer_templates.xml',
         'views/payment.xml',
         'views/templates.xml',
+        
+        'views/account_portal_templates.xml',
+        
         'data/payment_acquirer_data.xml',
      ],
     'installable': True,

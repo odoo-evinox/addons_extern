@@ -168,7 +168,7 @@
 </t>
 
 <!-- put also the payment   put also the payment    put also the payment    put also the payment          -->
-        <xpath expr="//div[@id='qrcode']" position="after">
+       <xpath expr="//div[@id='qrcode']" position="after">
               <p t-if="o.invoice_payment_ids">
                     <t t-foreach="o.invoice_payment_ids.filtered(lambda x: x.journal_id.type=='cash')" t-as="oo">
                            <br/> <br/>
