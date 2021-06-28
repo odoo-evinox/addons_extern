@@ -27,7 +27,7 @@
                 'payment', 
                 'stock_barcode', # just to show print invoice in stock_barcode application 
                 'delivery',
-                'cbs_solutions_customization', # for format of invoice with payment
+            #    'cbs_solutions_customization', # for format of invoice with payment
                 ],
     'data': [
         'views/stock_picking.xml',

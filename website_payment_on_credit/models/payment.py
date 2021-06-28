@@ -67,7 +67,8 @@ class OnDeliveryTransaction(models.Model):
         tx_to_process.write({
             'state': target_state,
             'date': fields.Datetime.now(),
-            'state_message': 'This state means that the client will pay us later based on emitted invoices',
+ # commented because is showing on /shop/confirmation as alert
+ #           'state_message': 'This state means that the client will pay us later based on emitted invoices',  
         })
 
         

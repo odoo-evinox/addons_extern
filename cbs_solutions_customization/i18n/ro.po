@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 14.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-06-06 18:00+0000\n"
-"PO-Revision-Date: 2021-06-06 21:01+0300\n"
+"POT-Creation-Date: 2021-06-28 12:41+0000\n"
+"PO-Revision-Date: 2021-06-28 15:43+0300\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -26,6 +26,21 @@ msgstr ", tip jurnal ="
 #: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.one_payment_receipt
 msgid ", state="
 msgstr ", judet = "
+
+#. module: cbs_solutions_customization
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_layout_cbs
+msgid "<i class=\"fa fa-at\" role=\"img\" aria-label=\"Email\" title=\"Email\"/>"
+msgstr ""
+
+#. module: cbs_solutions_customization
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_layout_cbs
+msgid "<i class=\"fa fa-globe\" role=\"img\" aria-label=\"Website\" title=\"Website\"/>"
+msgstr ""
+
+#. module: cbs_solutions_customization
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_layout_cbs
+msgid "<i class=\"fa fa-phone\" role=\"img\" aria-label=\"Phone\" title=\"Phone\"/>"
+msgstr ""
 
 #. module: cbs_solutions_customization
 #: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.one_payment_receipt
@@ -58,19 +73,19 @@ msgid "<strong>Customer Code:</strong>"
 msgstr "<strong>Cod Client:</strong>"
 
 #. module: cbs_solutions_customization
-#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.issuer_and_client
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_invoice_with_header_and_payment_receipt
 msgid "<strong>Due Date:</strong>"
-msgstr "<strong>Data Scadență:</strong>"
+msgstr ""
 
 #. module: cbs_solutions_customization
-#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.issuer_and_client
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_invoice_with_header_and_payment_receipt
 msgid "<strong>Invoice Date:</strong>"
-msgstr "<strong>Data Factură:</strong>"
+msgstr ""
 
 #. module: cbs_solutions_customization
-#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.issuer_and_client
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_invoice_with_header_and_payment_receipt
 msgid "<strong>Invoice nr:</strong>"
-msgstr "<strong>Nr. Factură:</strong>"
+msgstr ""
 
 #. module: cbs_solutions_customization
 #: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.partner_display_invoice
@@ -78,14 +93,14 @@ msgid "<strong>Nr. Reg. Com:</strong>"
 msgstr ""
 
 #. module: cbs_solutions_customization
-#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.issuer_and_client
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_invoice_with_header_and_payment_receipt
 msgid "<strong>Reference:</strong>"
-msgstr "<strong>Referință:</strong>"
+msgstr ""
 
 #. module: cbs_solutions_customization
-#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.issuer_and_client
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_invoice_with_header_and_payment_receipt
 msgid "<strong>Source:</strong>"
-msgstr "<strong>Sursă:</strong>"
+msgstr ""
 
 #. module: cbs_solutions_customization
 #: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.partner_display_invoice
@@ -93,22 +108,9 @@ msgid "<strong>State:</strong>"
 msgstr "<strong>Județ:</strong>"
 
 #. module: cbs_solutions_customization
-#: model:ir.model,name:cbs_solutions_customization.model_report_cbs_solutions_customization_invoice_with_receipt_report
-msgid ""
-"Account report_invoice_with_receipt_report report without payment lines"
-msgstr ""
-
-#. module: cbs_solutions_customization
-#: model:ir.model.fields,field_description:cbs_solutions_customization.field_account_bank_statement_line__cache_receipt_id
-#: model:ir.model.fields,field_description:cbs_solutions_customization.field_account_move__cache_receipt_id
-#: model:ir.model.fields,field_description:cbs_solutions_customization.field_account_payment__cache_receipt_id
-msgid "Cache Receipt"
-msgstr "Chitanță"
-
-#. module: cbs_solutions_customization
-#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.issuer_and_client
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_invoice_with_header_and_payment_receipt
 msgid "Cancelled Invoice"
-msgstr "Factură anulată"
+msgstr "Factura anulata"
 
 #. module: cbs_solutions_customization
 #: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.partner_display_invoice
@@ -116,9 +118,9 @@ msgid "Client:"
 msgstr ""
 
 #. module: cbs_solutions_customization
-#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.issuer_and_client
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_invoice_with_header_and_payment_receipt
 msgid "Credit Note"
-msgstr "Factură Storno"
+msgstr "Factura Storno"
 
 #. module: cbs_solutions_customization
 #: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.one_payment_receipt
@@ -127,26 +129,14 @@ msgstr "Dată:"
 
 #. module: cbs_solutions_customization
 #: model:ir.model.fields,field_description:cbs_solutions_customization.field_account_move__display_name
-#: model:ir.model.fields,field_description:cbs_solutions_customization.field_report_cbs_solutions_customization_invoice_with_receipt_report__display_name
+#: model:ir.model.fields,field_description:cbs_solutions_customization.field_ir_actions_report__display_name
 msgid "Display Name"
 msgstr "Nume afișat"
 
 #. module: cbs_solutions_customization
-#: code:addons/cbs_solutions_customization/models/sale.py:0
-#, python-format
-msgid "Down Payment %s"
-msgstr "Avans %s"
-
-#. module: cbs_solutions_customization
-#: code:addons/cbs_solutions_customization/models/sale.py:0
-#, python-format
-msgid "Down payment of %s%% %s"
-msgstr "Avans de %s%% %s"
-
-#. module: cbs_solutions_customization
-#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.issuer_and_client
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_invoice_with_header_and_payment_receipt
 msgid "Draft Invoice"
-msgstr "Factură draft"
+msgstr "Factura ciorna"
 
 #. module: cbs_solutions_customization
 #: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.partner_display_invoice
@@ -155,19 +145,21 @@ msgstr ""
 
 #. module: cbs_solutions_customization
 #: model:ir.model.fields,field_description:cbs_solutions_customization.field_account_move__id
-#: model:ir.model.fields,field_description:cbs_solutions_customization.field_report_cbs_solutions_customization_invoice_with_receipt_report__id
+#: model:ir.model.fields,field_description:cbs_solutions_customization.field_ir_actions_report__id
 msgid "ID"
 msgstr ""
 
 #. module: cbs_solutions_customization
-#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.issuer_and_client
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_invoice_with_header_and_payment_receipt
 msgid "Invoice"
-msgstr "Factură"
+msgstr "Factura"
 
 #. module: cbs_solutions_customization
-#: model:ir.actions.report,name:cbs_solutions_customization.action_invoice_with_receipt_report
-msgid "Invoice + Receipt"
-msgstr "Factură cu chitanță"
+#: model:ir.model.fields,field_description:cbs_solutions_customization.field_account_bank_statement_line__invoice_payment_ids
+#: model:ir.model.fields,field_description:cbs_solutions_customization.field_account_move__invoice_payment_ids
+#: model:ir.model.fields,field_description:cbs_solutions_customization.field_account_payment__invoice_payment_ids
+msgid "Invoice account.payment"
+msgstr ""
 
 #. module: cbs_solutions_customization
 #: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.partner_display_invoice
@@ -180,19 +172,36 @@ msgid "Journal Entry"
 msgstr "Notă contabilă"
 
 #. module: cbs_solutions_customization
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.view_move_add_sale_form
+msgid ""
+"Just payments make from bank, cache other are not here because they do not have a "
+"account_payment object"
+msgstr ""
+
+#. module: cbs_solutions_customization
 #: model:ir.model.fields,field_description:cbs_solutions_customization.field_account_move____last_update
-#: model:ir.model.fields,field_description:cbs_solutions_customization.field_report_cbs_solutions_customization_invoice_with_receipt_report____last_update
+#: model:ir.model.fields,field_description:cbs_solutions_customization.field_ir_actions_report____last_update
 msgid "Last Modified on"
 msgstr "Ultima modificare la"
 
 #. module: cbs_solutions_customization
 #: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.one_payment_receipt
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_layout_cbs
 msgid "Logo"
 msgstr ""
 
 #. module: cbs_solutions_customization
 #: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.one_payment_receipt
 msgid "Nr:"
+msgstr ""
+
+#. module: cbs_solutions_customization
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_layout_cbs
+msgid ""
+"Page:\n"
+"                    <span class=\"page\"/>\n"
+"                    of\n"
+"                    <span class=\"topage\"/>"
 msgstr ""
 
 #. module: cbs_solutions_customization
@@ -206,6 +215,16 @@ msgid "Payment Receipt"
 msgstr "Chitanță"
 
 #. module: cbs_solutions_customization
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.view_move_add_sale_form
+msgid "Payments"
+msgstr "Plati"
+
+#. module: cbs_solutions_customization
+#: model:ir.model,name:cbs_solutions_customization.model_ir_actions_report
+msgid "Report Action"
+msgstr "Acțiune Raport"
+
+#. module: cbs_solutions_customization
 #: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.partner_display_invoice
 msgid "Tax ID"
 msgstr "CIF"
@@ -213,21 +232,21 @@ msgstr "CIF"
 #. module: cbs_solutions_customization
 #: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.one_payment_receipt
 msgid ""
-"This is not a customer payment OR not a journal cache account OR state is "
-"not posted. It's type="
+"This is not a customer payment OR not a journal cache account OR state is not posted. "
+"It's type="
 msgstr ""
-"Aceasta nu este o chitanța  client SAU chitanța din jurnalul de casa SAU nu "
-"statusul nu este postat. Type="
+"Aceasta nu este o chitanța  client SAU chitanța din jurnalul de casa SAU nu statusul "
+"nu este postat. Type="
 
 #. module: cbs_solutions_customization
-#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.issuer_and_client
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_invoice_with_header_and_payment_receipt
 msgid "Vendor Bill"
-msgstr "Factură furnizor"
+msgstr "Factura furnizor"
 
 #. module: cbs_solutions_customization
-#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.issuer_and_client
+#: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.report_invoice_with_header_and_payment_receipt
 msgid "Vendor Credit Note"
-msgstr "Notă credit furnizor"
+msgstr "Factura storno furnizor"
 
 #. module: cbs_solutions_customization
 #: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.one_payment_receipt
@@ -245,7 +264,17 @@ msgid "for payment of:"
 msgstr "reprezentand:"
 
 #. module: cbs_solutions_customization
+#: model:ir.model.fields,help:cbs_solutions_customization.field_account_bank_statement_line__invoice_payment_ids
+#: model:ir.model.fields,help:cbs_solutions_customization.field_account_move__invoice_payment_ids
+#: model:ir.model.fields,help:cbs_solutions_customization.field_account_payment__invoice_payment_ids
+msgid ""
+"the payments for this invoice (from account.payment (if a line form accont_payment "
+"has some sum matched with a line from this invoice)). The invoice can be paid also "
+"with another invoice (credit note) or with another type of accounting entry - you are "
+"not going to see this here. This is used to print the invoice with cache payments  "
+msgstr ""
+
+#. module: cbs_solutions_customization
 #: model_terms:ir.ui.view,arch_db:cbs_solutions_customization.one_payment_receipt
 msgid "with address:"
 msgstr "cu adressa:"
-

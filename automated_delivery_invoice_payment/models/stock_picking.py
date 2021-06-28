@@ -87,7 +87,8 @@ class StockPicking(models.Model):
         if self.created_invoice_id:
             docids = self.created_invoice_id.ids
                                # 'account.account_invoices'  default invoice
-            return self.env.ref('cbs_solutions_customization.action_invoice_with_receipt_report').report_action(docids, config=False)              # config should be false as otherwise it will call configuration wizard that works weirdly
+#            return self.env.ref('cbs_solutions_customization.action_invoice_with_receipt_report').report_action(docids, config=False)              # config should be false as otherwise it will call configuration wizard that works weirdly
+            return self.env.ref('account.account_invoices').report_action(docids, config=False)              # config should be false as otherwise it will call configuration wizard that works weirdly
         else:
             raise ValidationError(f"No invoice created from this picking={self} state={self.state}")
 
