@@ -2,7 +2,9 @@
 <odoo>
     <template id="pyament_token_on_credit" name="pyament_token_on_credit" inherit_id="payment.payment_tokens_list">
         <xpath expr="//div[hasclass('o_payment_acquirer_select')]" position="inside">
-            <t t-if="on_credit_acquiers_reason[acq]!=''"><span class="text-danger"  t-att-title="on_credit_acquiers_reason[acq]">You are over the credit limit!</span></t>
+            <t t-if="on_credit_acquiers_reason">
+                <t t-if="on_credit_acquiers_reason[acq]!=''"><span class="text-danger"  t-att-title="on_credit_acquiers_reason[acq]">You are over the credit limit!</span></t>
+            </t>
         </xpath>        
 
         <xpath expr="//div[hasclass('o_payment_acquirer_select')]" position="attributes">
