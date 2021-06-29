@@ -121,26 +121,26 @@
 <!-- at credit note put qty with -   at credit note put qty with -  at credit note put qty with -        -->
 
 <span t-field="line.quantity" position="before">
-    <t t-if="o.move_type == 'out_refund' and o.state != 'cancel'">-</t>
+    <t t-if="o.move_type == 'out_refund' ">-</t>
 </span>
 <span t-field="line.price_subtotal" position="before">
-    <t t-if="o.move_type == 'out_refund' and o.state != 'cancel'">-</t>
+    <t t-if="o.move_type == 'out_refund' ">-</t>
 </span>
 <span t-esc="current_subtotal" position="before">
-    <t t-if="o.move_type == 'out_refund' and o.state != 'cancel'">-</t>
+    <t t-if="o.move_type == 'out_refund' ">-</t>
 </span>    
     
 
 <span t-field="o.amount_untaxed" position="before">
-    <t t-if="o.move_type == 'out_refund' and o.state != 'cancel'" >-</t>
+    <t t-if="o.move_type == 'out_refund' " >-</t>
 </span>
 
 <span t-esc="amount_by_group[3]" position="before">
-    <t t-if="o.move_type == 'out_refund' and o.state != 'cancel'">-</t>
+    <t t-if="o.move_type == 'out_refund' ">-</t>
 </span>    
     
 <span  t-field="o.amount_total" position="before">
-    <t t-if="o.move_type == 'out_refund' and o.state != 'cancel'">-</t>
+    <t t-if="o.move_type == 'out_refund' ">-</t>
 </span>    
 
 
