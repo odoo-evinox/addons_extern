@@ -1,7 +1,7 @@
 {
     'name': 'website payment on credit ',
     'category': 'Website',
-    'version': '14.0.0.1',
+    'version': '14.0.0.2',
     'author':'Nexterp Romania',
     'description': ''' 
     If the partner has Credit Limit at partner in Sale&Purcase Tab, can show payment_on_credit  option as payment method on site,
@@ -10,7 +10,9 @@
     It knows when is over the limit from trying to set a sale_order to sent and if raise error will show that error ( form partner_current_debit_credit_payments)
      
     
-    When this payment method is selected, the order will be validated automatically ( like at a online payment) 
+    When this payment method is selected, the order will be validated automatically ( like at a online payment)
+    
+    v 0.2 now ok payment also from invoice ( portal) but no check is done there, no error - because does not mather 
 ''',
     'depends': ['payment',
                 'website_sale',

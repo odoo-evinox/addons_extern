@@ -17,10 +17,10 @@
             <attribute name="t-value">tx_ids.filtered(lambda tx: tx.state == 'pending' and tx.acquirer_id.provider in ('transfer', 'manual','on_credit'))</attribute>
          </t>
          
-         <div t-if="(invoice.amount_residual or not tx_ids) and invoice.state == 'posted' and invoice.payment_state in ('not_paid', 'partial') and invoice.amount_total" id="portal_pay" position="replace">
-         </div>
 
 <!-- here is the error with payment_on_credit at printing the invoices from portal    
+         <div t-if="(invoice.amount_residual or not tx_ids) and invoice.state == 'posted' and invoice.payment_state in ('not_paid', 'partial') and invoice.amount_total" id="portal_pay" position="replace">
+         </div>
 
             <div t-if="(invoice.amount_residual or not tx_ids) and invoice.state == 'posted' and invoice.payment_state in ('not_paid', 'partial') and invoice.amount_total" id="portal_pay">
                 <div t-if="pms or acquirers" id="payment_method">
@@ -28,4 +28,7 @@
                 </div>
             </div>-->
             </template>
+
+    
+
 </odoo>
