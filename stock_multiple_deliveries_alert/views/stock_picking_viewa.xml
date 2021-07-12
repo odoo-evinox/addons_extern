@@ -1,0 +1,16 @@
+<odoo>
+    <record id="stock_picking_form" model="ir.ui.view">
+        <field name="name">stock_picking_form</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form" />
+        <field name="priority">290</field>
+        <field name="arch" type="xml">
+            <field name="notebook" position="before" >
+                <group string="Other deliveries in same day" attrs="{'invisible':[('other_unfinished_deliveries_ids','=',False),('','=',False)]}">
+                    <field name="other_unfinished_deliveries_ids"/>
+                    <field name="finished_deliveries_same_day_ids"/>
+                </group>
+            </field>
+       </field>
+    </record>
+</odoo>
