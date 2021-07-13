@@ -6,10 +6,13 @@
         <field name="priority">290</field>
         <field name="arch" type="xml">
             <notebook position="before" >
-                <group string="Other deliveries in same day" attrs="{'invisible':[('other_unfinished_deliveries_ids','=',[]),('finished_deliveries_same_day_ids','=',[])]}">
-                    <field name="other_unfinished_deliveries_ids"/>
-                    <field name="finished_deliveries_same_day_ids"/>
-                </group>
+                <separator string="other_unfinished_deliveries" attrs="{'invisible':[('other_unfinished_deliveries_ids','=',[])]}"/>
+                 
+                    <field name="other_unfinished_deliveries_ids" attrs="{'invisible':[('other_unfinished_deliveries_ids','=',[])]}"/>
+                <separator string="finished_deliveries_same_day_ids" attrs="{'invisible':[('finished_deliveries_same_day_ids','=',[])]}"/>
+
+                    <field name="finished_deliveries_same_day_ids"  attrs="{'invisible':[('finished_deliveries_same_day_ids','=',[])]}"/>
+
             </notebook>
        </field>
     </record>
