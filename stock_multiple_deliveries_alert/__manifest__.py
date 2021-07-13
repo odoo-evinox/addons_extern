@@ -8,9 +8,9 @@
     "version": "14.0.0.1",
     "license": "AGPL-3",
     "description":""" used if you have for example online shop and the customer is creating multiple orders. to know at delivery to make only one packet 
-    ( and with this info you can take whatever decition you want. without it you will make a lot of deliveries for same partner) """,
+    ( and with this info you can take whatever decision you want. without it you will make a lot of deliveries for same partner) """,
     "author": "NextERP Romania",
     "website": "https://nexterp.ro",
     "depends": ["stock"],
-    "data": ["views/stock_picking_view.xml"],
+    "data": ["views/stock_picking_views.xml"],
 }

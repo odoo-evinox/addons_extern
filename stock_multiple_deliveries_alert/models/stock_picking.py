@@ -8,8 +8,8 @@ from datetime import timedelta
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
-    other_unfinished_deliveries_ids = fields.Many2many("stock.picking", compute="_get_same_day_deliveries", compute_sudo=1, help="In his moment ( before refresh) this deliveries are for same partner and are not done/caceled/draft")
-    finished_deliveries_same_day_ids = fields.Many2many("stock.picking", compute="_get_same_day_deliveries", compute_sudo=1, help="For this client, exist in this deliveries donein last 23 hours that have status done. You could send also this product with them")
+    other_unfinished_deliveries_ids = fields.One2many("stock.picking", compute="_get_same_day_deliveries", compute_sudo=1, help="In his moment ( before refresh) this deliveries are for same partner and are not done/caceled/draft")
+    finished_deliveries_same_day_ids = fields.One2many("stock.picking", compute="_get_same_day_deliveries", compute_sudo=1, help="For this client, exist in this deliveries donein last 23 hours that have status done. You could send also this product with them")
 
 # this is to check over the limit
     def return_parent_or_self(self,partner_id):
@@ -19,7 +19,7 @@ class StockPicking(models.Model):
         else:
             return partner_id
 
-    @api.depends('state','done_date','picking_type_code')
+#    @api.depends()#'state','date_done','picking_type_code','partner_id'
     def _get_same_day_deliveries(self):
         for rec in self:
             if rec.picking_type_code != 'outgoing':
@@ -28,11 +28,12 @@ class StockPicking(models.Model):
             else:
                 yesterday = fields.datetime.now() - timedelta(hours = 23)
                 highest_partner = self.return_parent_or_self(rec.partner_id)
-                highest_partner_addreses = self.env['res.parnter'].search([('id','child of',highest_partner.id)])
-                other_unfinished_deliveries_ids = self.search([('picking_type_code','=','outgoing'),
+                highest_partner_addreses = self.env['res.partner'].search([('id','child_of',highest_partner.id)])
+                rec.other_unfinished_deliveries_ids = self.env['stock.picking'].search([('picking_type_code','=','outgoing'),('id','!=',rec.id),
                                                                ('partner_id','in',highest_partner_addreses.ids),
                                                                ('state','not in',['draft','cancel','done'])])
-                finished_deliveries_same_day_ids = self.search([('picking_type_code','=','outgoing'),
+                rec.finished_deliveries_same_day_ids = self.search([('picking_type_code','=','outgoing'),
                                                                ('partner_id','in',highest_partner_addreses.ids),
-                                                               ('date_done','>',)
+                                                               ('date_done','>',str(yesterday)),
                                                                ('state','=','done')])
+                
