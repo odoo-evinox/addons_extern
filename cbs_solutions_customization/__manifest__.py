@@ -7,6 +7,9 @@
     - cache payments can be print 2 on same page
     -  will show on print also the account_payments that are with cash
     - on invoice showing in another tab also the payments made from bank/cash ( account_payments)
+
+
+used at simple accounting by cbs ( no enterprise module)
     """,
     "version": "14.0.1.0.3",
     "category": "Localization",

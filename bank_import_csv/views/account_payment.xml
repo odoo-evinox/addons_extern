@@ -8,7 +8,7 @@
                 <attribute name="js_class">button_after_create_payment</attribute>
             </tree>
 
-<!-- working only arter are selected some lines     
+<!-- working only after are selected some lines     
        <header position="inside">
                 <button  name="%(account_payment_import_bank_action)d"  type="action" string="Import Bank Statemetns" class="oe_highlight"/>
             </header>

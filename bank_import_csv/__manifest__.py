@@ -11,10 +11,12 @@
     no more hiden menus for statements ..
     
     future:
-    1. on customer to exist also payments; and a diffrence between invoices and paymetns. to view also not_payd invoices.
-    2. also to reconcile the payments with inovices
+    1. on customer to exist also payments; and a difference between invoices and payments. to view also not_payd invoices.
+    2. also to reconcile the payments with invoices
     3. in payment list also to review = that that have as client not found clinet
 
+
+used at simple accounting by cbs ( no enterprise module) no use of account.bank.statement
 ''',
     'depends': ['account'],
     'data': [
