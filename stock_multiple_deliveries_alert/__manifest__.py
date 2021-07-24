@@ -10,8 +10,10 @@
     "description":""" used if you have for example online shop and the customer is creating multiple orders. to know at delivery to make only one packet 
     ( and with this info you can take whatever decision you want. without it you will make a lot of deliveries for same partner) 
  
- v 0.2  also in sale you have a field called unprocess_delivery_ids meaning that exist at least one stock.picking that is not in ['draft', 'done', 'cancel']
-        you have some filed to tell you that exist other sales with unprocess_delivery_ids  or other that are processed and in less than 24h     
+ v 0.2  also in sale you have a field called has_unprocess_delivery meaning that exist at least one stock.picking that is not in ['draft', 'done', 'cancel']
+        has_unprocess_delivery also as filter in sale_order
+        you have some filed to tell you that exist other sales with unprocess_delivery_ids  
+        you ahve a filed that is telling you that exist oder processed orders for same client in less than 24h     
     
     
     """,
