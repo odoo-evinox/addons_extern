@@ -30,7 +30,11 @@ used at simple accounting by cbs ( no enterprise module) no use of account.bank.
     ],
     
     'qweb': [ "static/src/xml/button_after_create_payment.xml",],
-
+    'external_dependencies': {
+        'python': [
+            'distlib',
+        ]
+    },
     'installable': True,
     'auto_install': True,
     'license': 'AGPL-3',
