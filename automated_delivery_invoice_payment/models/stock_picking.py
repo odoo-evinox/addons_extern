@@ -1,6 +1,8 @@
 from odoo import fields, models
 import time
 from odoo.exceptions import ValidationError
+import logging
+_logger = logging.getLogger(__name__)
 
 class StockPicking(models.Model):
     _inherit = "stock.picking"
@@ -21,49 +23,57 @@ class StockPicking(models.Model):
                                  )
         res =  super(StockPicking,self).button_validate()
         if res == True:
-            #self._cr.commit()  # here is safe because the result is ok, no error if res ==True, is needed so the sale_id to have invoice_status, and to be able to create the invoice
-#            time.sleep(0.04)
-            for rec in self:
-                sale_to_write = {}
-                if rec.sale_id and rec.sale_id.invoice_status == "to invoice":  # was the probem with sale orders with is_downpayment. this last part is not giving the right value if no _cr.commit()
-                    created_invoice = rec.sale_id._create_invoices(final=True)
-#                    created_invoice.line_ids.filtered(lambda r: r.line_section='display_type').unlink()# still the problem from up and is not the case # is puting some lines with Down Payments
-                    if rec.sale_id.authorized_transaction_ids:
-                        tranzactions = rec.sale_id.authorized_transaction_ids.filtered(lambda r:r.state=='authorized')
-                        paid = sum([x.amount for x in tranzactions])
-                        paid_less, paid_more= 0,0
-                        if created_invoice.amount_total - paid >0.01:
-                            paid_less = created_invoice.amount_total - paid
-                        elif created_invoice.amount_total - paid <-0.01:
-                            paid_more = paid-created_invoice.amount_total
-                        if  paid_less or  paid_more:
-                            invoice_to_write = {'difference_between_order_and_deliverd':True}
-                            sale_to_write.update({'difference_between_order_and_deliverd':True}) 
-                            if tranzactions[0].acquirer_id.provider == 'on_delivery':  # here we are going to change the sum because is not yet paid
-                                tranzactions[0].amount = tranzactions[0].amount + paid_less - paid_more
-                                paid_less, paid_more= 0,0
-                            else:  # is bank ??
-                                invoice_to_write.update({'paid_less':paid_less, 'paid_more':paid_more})
-                                sale_to_write = {'paid_less':paid_less, 'paid_more':paid_more}
-                                if paid_more:
-                                    # we create a line with advance 
-                                    #invoice_to_write['line_ids'] = [(0,0{ 'name': 'Paid more',
-                                            # 'type': 'service',
-                                            # 'invoice_policy': 'order',
-                                            # 'property_account_income_id': self.deposit_account_id.id,
-                                            # 'taxes_id': [(6, 0, self.deposit_taxes_id.ids)],
-                                            # 'company_id': False,},]
-                                    pass
-                                created_invoice.write(invoice_to_write)
-                                    
+            for rec in self.sudo(): # sudo neccesary because not all inventory workers have also accounting rights
+                if rec.sale_id and rec.sale_id.invoice_status == "to invoice":  
+                    paid_less, paid_more= 0,0
+                    sale_to_write = {'paid_less':paid_less, 'paid_more':paid_more, 'difference_between_order_and_deliverd':False}
                     
-                    res_post_invoice = created_invoice.action_post()
-                    rec.write({'created_invoice_id':created_invoice.id})
-                    if sale_to_write:
-                        rec.sale_id.write(sale_to_write)
+                    # WE ARE GOING TO AUTOMATICALY CREATE INVOICE ONLY IF IS NOT FROM 
+                    try:
+                        created_invoice = rec.sale_id._create_invoices(final=True)
+                    except Exception as ex:
+                        _logger.error(f'we could not create the invoice from picking={rec} validate because of error:{ex}.\n Normally another module has some requirements and can not be done this and also that ( rma for example with a replace and refund )')
+                        created_invoice = ''
+                    if created_invoice:
+                        if rec.sale_id.authorized_transaction_ids:
+                            authorized_tranzactions = rec.sale_id.authorized_transaction_ids.filtered(lambda r:r.state=='authorized')
+                            paid = sum([x.amount for x in authorized_tranzactions])
+                            if created_invoice.amount_total - paid >0.01:
+                                paid_less = created_invoice.amount_total - paid
+                            elif created_invoice.amount_total - paid <-0.01:
+                                paid_more = paid-created_invoice.amount_total
+                            if  paid_less or  paid_more:
+                                sale_to_write.update({'difference_between_order_and_deliverd':True})
+                                # here we are going to change the sum because is not yet paid
+                                if authorized_tranzactions[0].acquirer_id.provider == 'on_delivery':  
+                                    authorized_tranzactions[0].amount = authorized_tranzactions[0].amount + paid_less - paid_more
+                                    paid_less, paid_more= 0,0
+                                else:  # is bank ??
+                                    sale_to_write.update({'paid_less':paid_less, 'paid_more':paid_more})
+                                    if paid_more:
+                                        # we could create a line with advance ; or another invoice
+                                        pass
+                                sale_to_write.update({'paid_less':paid_less, 'paid_more':paid_more})            
+                                invoice_to_write = sale_to_write.copy()
+                                if paid_less == paid_more:
+                                    invoice_to_write['resolved_difference'] = f'Modified payment on delivery from {paid} to {created_invoice.amount_total}' 
+                                created_invoice.write(invoice_to_write)
+                    try:
+                        res_post_invoice = created_invoice.action_post()
+                    except Exception as ex:
+                        _logger.error(f'we could not post the invoice from picking={rec}, invoice {created_invoice}  because of error:{ex}.\n Normally another module has some requirements and can not be done this and also that ')
+
+                        pass # for the case that the invoice is already posted( from other modules like rma
+                    # we write in sale_order all the time because can have older status on it
                     rec.sale_id.write(sale_to_write)
-                    if rec.sale_id.authorized_transaction_ids:
-                        created_invoice.payment_action_capture()
+                    # we write the cread invoice in picking
+                    if created_invoice:
+                        rec.write({'created_invoice_id':created_invoice.id})  
+                    
+
+                        # set the transaction as done and link it with the invoice
+                        if rec.sale_id.authorized_transaction_ids:
+                            created_invoice.payment_action_capture()
                     
                     # if it had a payment.transaction if is from bank do the recociliation
                     # if is payment on delivery, change the payment transaction to have the same value and reconciliation
@@ -77,7 +87,8 @@ class StockPicking(models.Model):
         if self.created_invoice_id:
             docids = self.created_invoice_id.ids
                                # 'account.account_invoices'  default invoice
-            return self.env.ref('cbs_solutions_customization.action_invoice_with_receipt_report').report_action(docids, config=False)              # config should be false as otherwise it will call configuration wizard that works weirdly
+#            return self.env.ref('cbs_solutions_customization.action_invoice_with_receipt_report').report_action(docids, config=False)              # config should be false as otherwise it will call configuration wizard that works weirdly
+            return self.env.ref('account.account_invoices').report_action(docids, config=False)              # config should be false as otherwise it will call configuration wizard that works weirdly
         else:
             raise ValidationError(f"No invoice created from this picking={self} state={self.state}")
 
