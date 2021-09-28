@@ -29,7 +29,7 @@ class AccountPaymentImportBank(models.TransientModel):
         help="Get you bank statements in electronic format from your bank "
         "and select them here.",
     )
-    journal_id = fields.Many2one('account.journal',domain=[('type','=','bank')],require=1, default=lambda self: self.env['account.journal'].search([('type','=','bank')],limit=1))
+    journal_id = fields.Many2one('account.journal',domain=[('type','=','bank')], required=1, default=lambda self: self.env['account.journal'].search([('type','=','bank')],limit=1))
     suported_formats = fields.Char(default='*.csv format for Banca Transilvania;', help="list of file types and the bank that is for", readonly=1)
     text = fields.Char(default='Pentru retrageri de numerar se va considera ca contul de casa este primul jurnal de cash / registru de casa gasit',  readonly=1)
     statement_filename = fields.Char()
