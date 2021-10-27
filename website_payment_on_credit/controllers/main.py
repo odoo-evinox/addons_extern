@@ -11,7 +11,7 @@ _logger = logging.getLogger(__name__)
 class WebsiteSalePaymentOnCredit(WebsiteSale):
 
     def _get_shop_payment_values(self, order, **kwargs):
-        values = super()._get_shop_payment_values(order, **kwargs)
+        values = super(WebsiteSalePaymentOnCredit,self)._get_shop_payment_values(order, **kwargs)
         parent_or_self = order.partner_id.return_parent_or_self()
         on_credit_acquiers = []
         values['on_credit_acquiers_reason'] = {}
