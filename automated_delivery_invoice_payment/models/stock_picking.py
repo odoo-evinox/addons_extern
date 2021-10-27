@@ -73,8 +73,11 @@ class StockPicking(models.Model):
 
                         # set the transaction as done and link it with the invoice
                         if rec.sale_id.authorized_transaction_ids:
-                            created_invoice.payment_action_capture()
-                    
+#20211027   modified with try because the the payment_action_capure at sale order for bt pay is giving error Payment must be in approved state
+                            try:
+                                created_invoice.payment_action_capture()
+                            except Exception as ex: 
+                                rec.sale_id.message_post(body=f"capture tranzaction error: {str(ex)}",message_type='notification')
                     # if it had a payment.transaction if is from bank do the recociliation
                     # if is payment on delivery, change the payment transaction to have the same value and reconciliation
                     

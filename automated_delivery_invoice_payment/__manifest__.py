@@ -1,7 +1,7 @@
 {
     'name': 'After delivery automated posted invoice, payment ',
     'category': 'Stock',
-    'version': '14.0.0.2',
+    'version': '14.0.0.3',
     'author':'Nexterp Romania',
     'description': ''' 
     simplifing the odoo flux less clicks more thinks automaticaly.
@@ -19,7 +19,8 @@
        ! it the payment is bank will capture the transaction that exists
        !     and you must give them back the money as a wrong payment and if is too few to tell them to pay the invoice
        !?  another version would be to create a advance invoice, than to reverse it and to make the payment or to make somehow to put in on a future sale
-       
+ v0.3 #20211027   modified with try because the the payment_action_capure at sale order for bt pay is giving error Payment must be in approved state
+      
 ''',
     'depends': ['stock',
                 'sale',
