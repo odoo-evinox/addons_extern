@@ -35,10 +35,12 @@ class SaleOrder(models.Model):
             highest_partner_addreses = self.env['res.partner'].search([('id','child_of',highest_partner.id)])
             rec.other_unprocess_sales_ids = self.search([      ('partner_id','in',highest_partner_addreses.ids),
                                                                ('state','not in',['draft','cancel']),
+                                                               ('id','!=',rec.id),
                                                                ('has_unprocess_delivery','!=',False)])
             rec.finished_sales_same_day_ids = self.search([
                                                                ('partner_id','in',highest_partner_addreses.ids),
                                                                ('date_order','>',str(yesterday)),
+                                                               ('id','!=',rec.id),
                                                                ('state','not in',['draft'',cancel'])])
                     
     
