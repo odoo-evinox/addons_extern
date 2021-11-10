@@ -35,5 +35,6 @@ class StockPicking(models.Model):
                 rec.finished_deliveries_same_day_ids = self.search([('picking_type_code','=','outgoing'),
                                                                ('partner_id','in',highest_partner_addreses.ids),
                                                                ('date_done','>',str(yesterday)),
-                                                               ('state','=','done')])
+                                                               ('state','=','done'),
+                                                               ('id','!=',rec.id)     ])
                 
