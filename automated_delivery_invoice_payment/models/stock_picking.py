@@ -58,16 +58,15 @@ class StockPicking(models.Model):
                                 if paid_less == paid_more:
                                     invoice_to_write['resolved_difference'] = f'Modified payment on delivery from {paid} to {created_invoice.amount_total}' 
                                 created_invoice.write(invoice_to_write)
-                    try:
-                        res_post_invoice = created_invoice.action_post()
-                    except Exception as ex:
-                        _logger.error(f'we could not post the invoice from picking={rec}, invoice {created_invoice}  because of error:{ex}.\n Normally another module has some requirements and can not be done this and also that ')
-
+                        try:
+                            res_post_invoice = created_invoice.action_post()
+                        except Exception as ex:
+                            _logger.error(f'we could not post the invoice from picking={rec}, invoice {created_invoice}  because of error:{ex}.\n Normally another module has some requirements and can not be done this and also that ')
+                            continue
                         pass # for the case that the invoice is already posted( from other modules like rma
                     # we write in sale_order all the time because can have older status on it
-                    rec.sale_id.write(sale_to_write)
+                        rec.sale_id.write(sale_to_write)
                     # we write the cread invoice in picking
-                    if created_invoice:
                         rec.write({'created_invoice_id':created_invoice.id})  
                     
 
