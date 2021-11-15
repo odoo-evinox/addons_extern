@@ -34,6 +34,7 @@ class StockPicking(models.Model):
                     except Exception as ex:
                         _logger.error(f'we could not create the invoice from picking={rec} validate because of error:{ex}.\n Normally another module has some requirements and can not be done this and also that ( rma for example with a replace and refund )')
                         created_invoice = ''
+                        continue
                     if created_invoice:
                         if rec.sale_id.authorized_transaction_ids:
                             authorized_tranzactions = rec.sale_id.authorized_transaction_ids.filtered(lambda r:r.state=='authorized')
@@ -63,10 +64,10 @@ class StockPicking(models.Model):
                         except Exception as ex:
                             _logger.error(f'we could not post the invoice from picking={rec}, invoice {created_invoice}  because of error:{ex}.\n Normally another module has some requirements and can not be done this and also that ')
                             continue
-                        pass # for the case that the invoice is already posted( from other modules like rma
-                    # we write in sale_order all the time because can have older status on it
+                         # for the case that the invoice is already posted( from other modules like rma
+                        # we write in sale_order all the time because can have older status on it
                         rec.sale_id.write(sale_to_write)
-                    # we write the cread invoice in picking
+                        # we write the cread invoice in picking
                         rec.write({'created_invoice_id':created_invoice.id})  
                     
 
