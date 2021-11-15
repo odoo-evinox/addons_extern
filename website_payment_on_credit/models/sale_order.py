@@ -8,7 +8,7 @@ class SaleOrder(models.Model):
     def action_confirm_payment_transaction(self):
         for sale in self:
             for transaction in sale.transaction_ids.filtered(
-                lambda t: t.state in ["pending", "authorized"] and t.acquirer_id.provider == "on_delivery"
+                lambda t: t.state in ["pending", "authorized"] and t.acquirer_id.provider == "on_credit"
             ):
                 transaction._set_transaction_done()
                 tx_to_process = transaction.filtered(lambda x: x.state == "done" and x.is_processed is False)
