@@ -35,7 +35,7 @@ class StockPicking(models.Model):
                         _logger.error(f'we could not create the invoice from picking={rec} validate because of error:{ex}.\n Normally another module has some requirements and can not be done this and also that ( rma for example with a replace and refund )')
                         created_invoice = ''
                         continue
-                    if created_invoice:
+                    if created_invoice and type(created_invoice) is not dict:  # can be the case when it returns a page with error an not an error
                         if rec.sale_id.authorized_transaction_ids:
                             authorized_tranzactions = rec.sale_id.authorized_transaction_ids.filtered(lambda r:r.state=='authorized')
                             paid = sum([x.amount for x in authorized_tranzactions])
