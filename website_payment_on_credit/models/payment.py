@@ -5,7 +5,7 @@ _logger = logging.getLogger(__name__)
 from odoo.tools.float_utils import float_compare
 import pprint
 
-class OnDeliveryAcquirer(models.Model):
+class OnCreditAcquirer(models.Model):
     _inherit = "payment.acquirer"
 
     provider = fields.Selection(selection_add=[("on_credit", "On Credit")], ondelete={"on_credit": "set default"})
@@ -20,10 +20,18 @@ class OnDeliveryAcquirer(models.Model):
 
 
 
-class OnDeliveryTransaction(models.Model):
+class OnCreditTransaction(models.Model):
     _inherit = "payment.transaction"
 
     state = fields.Selection(selection_add=[('on_credit', 'On_credit')],ondelete={"on_credit": "set default"} )
+
+    def on_credit_s2s_void_transaction(self):
+        self._set_transaction_cancel()
+
+    def on_credit_s2s_capture_transaction(self):
+        self._set_transaction_done()
+        tx_to_process = self.filtered(lambda x: x.state == "done" and x.is_processed is False)
+        tx_to_process._post_process_after_done()
 
 
     @api.model
@@ -54,7 +62,13 @@ class OnDeliveryTransaction(models.Model):
 
     def _on_credit_form_validate(self, data):  # why is not getting here
         _logger.info('Validated on_credit payment for tx %s: set as pending' % (self.reference))
-        self._set_transaction_authorized() 
+
+        if not self.acquirer_id.capture_manually:
+            self._set_transaction_authorized()
+        else:
+            self._set_transaction_pending()
+        return True
+
 #        self._set_transaction_done()   # here is creating also the account_payment for bank, that is not ok.
         allowed_states = ('draft', 'authorized', 'pending', 'error')
         target_state = 'on_credit'
@@ -67,8 +81,8 @@ class OnDeliveryTransaction(models.Model):
         tx_to_process.write({
             'state': target_state,
             'date': fields.Datetime.now(),
- # commented because is showing on /shop/confirmation as alert
- #           'state_message': 'This state means that the client will pay us later based on emitted invoices',  
+             # commented because is showing on /shop/confirmation as alert
+             #           'state_message': 'This state means that the client will pay us later based on emitted invoices',
         })
 
         
