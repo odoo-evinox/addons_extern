@@ -12,4 +12,4 @@ class SaleOrder(models.Model):
             ):
                 transaction._set_transaction_done()
                 tx_to_process = transaction.filtered(lambda x: x.state == "done" and x.is_processed is False)
-                tx_to_process._post_process_after_done()            
+                tx_to_process._post_process_after_done()
