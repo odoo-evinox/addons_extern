@@ -1,23 +1,17 @@
-# Copyright 2020 NextERP Romania SRL
-# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
+# Copyright (C) 2021 NextERP Romania
+# License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 {
     "name": "Romania - Stock Picking Comment Template",
     "category": "Localization",
-    "description": """
-    This model is going to add a a header and a footer at picking report.
-    a transfer of type incoming  will have header RECEPTION NOTE AND DIFFERENCES,  and as footer a table for reception and differencies
-    internal to location   - has a signature for giving and receiving
-    internal to consume - is a consume
-
-    installed_stock_picking_report_valued field in stock_picking is telling ig the stock_picking_repot_valued is instaleed. If is intaled will show also values in picking
-    we didn't put dependency stock_picking_repot_valued because that module is dependent on stock_account that is maybe not used
-
+    "summary": """
+        This model is going to add a a header and a footer at picking report
+         depeding on the operation type.
     """,
     "depends": [
         "sale_stock",
         "purchase_stock",
-        "l10n_ro_stock",
-        "base_comment_template",  # you can take it from here https://github.com/OCA/reporting-engine.git
+        "l10n_ro_stock_account",
+        "base_comment_template",
     ],
     "data": [
         "data/l10n_ro_stock_picking_comment_template.xml",
