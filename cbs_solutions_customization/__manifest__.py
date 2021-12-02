@@ -10,8 +10,11 @@
 
 
 used at simple accounting by cbs ( no enterprise module)
+
+v0.4  now even if in sale_order we have show discount ( and in account_move_line we have price and discount) 
+on invoice to be easy for the client we put the price with discount ( and not big price and discount)
     """,
-    "version": "14.0.1.0.3",
+    "version": "14.0.1.0.4",
     "category": "Localization",
     "author": "NextERP",
     "website": "https://nexterp.ro",

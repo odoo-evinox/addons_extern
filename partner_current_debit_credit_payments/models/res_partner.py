@@ -124,4 +124,7 @@ class ResPartner(models.Model):
         ]
         price_totals = self.env['account.invoice.report'].search(domain)  
         for partner, child_ids in all_partners_and_children.items():
-            partner.total_bills = sum(x.move_id.amount_total for x in price_totals)
+            total_bills = 0
+            for x in price_totals:
+                if x.move_id:
+                    partner.total_bills +=x.move_id.amount_total

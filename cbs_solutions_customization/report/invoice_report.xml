@@ -61,6 +61,19 @@
 	</template>
     
     <template id="report_invoice_with_header_and_payment_receipt" priority="2000" inherit_id="account.report_invoice_document">
+<!-- not to show discount on invoices -->
+<!--            <t t-set="display_discount" t-value="any(l.discount for l in o.invoice_line_ids)"/>-->
+            <xpath expr="//t[@t-set='display_discount']" position="attributes">
+                <attribute name="t-value" eval="0"/>
+            </xpath>
+<!-- t show as unit price discounted price price_unit * (1 - (discount / 100.0))-->
+<!--                                            <span class="text-nowrap" t-field="line.price_unit"/>
+--> 
+        <xpath expr="//span[@class='text-nowrap']" position="replace">
+             <span class="text-nowrap" t-esc="line.price_unit  * (1 - (line.discount / 100.0))" t-options='{"widget": "float", "precision": 2}'/>
+        </xpath>
+    
+<!--/ not to show discount on invoices -->
 
 	   	<xpath expr='//t[@t-set="address"]' position="replace">
     	   	<t t-set="address"/>
