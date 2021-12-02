@@ -1,8 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <odoo>
-    <template id="valued_report_picking_for_purchase" inherit_id="stock.report_delivery_document">
-        <xpath expr="//table[@name='stock_move_line_table']/thead/tr"
-               position="inside">
+    <template
+        id="valued_report_picking_for_purchase"
+        inherit_id="stock.report_delivery_document"
+    >
+        <xpath expr="//table[@name='stock_move_line_table']/thead/tr" position="inside">
             <t t-if="o.purchase_id and o.move_line_ids">
                 <t t-if="o.state != 'done'">
                     <th class="text-right">
@@ -12,9 +14,6 @@
                 <th class="text-right">
                     <strong>Unit Price</strong>
                 </th>
-                <th class="text-right" groups="product.group_discount_per_so_line">
-                    <strong>Discount</strong>
-                </th>
                 <th class="text-right">
                     <strong>Subtotal</strong>
                 </th>
@@ -22,8 +21,19 @@
                     <strong>Taxes</strong>
                 </th>
             </t>
+            <t t-if="o.is_internal_consumption">
+                <th>
+                    <strong>Unit Price</strong>
+                </th>
+                <th>
+                    <strong>Subtotal</strong>
+                </th>
+            </t>
         </xpath>
-        <xpath expr="//table[@t-if=&quot;o.move_line_ids and o.state==&apos;done&apos;&quot;]" position="after">
+        <xpath
+            expr="//table[@t-if=&quot;o.move_line_ids and o.state==&apos;done&apos;&quot;]"
+            position="after"
+        >
             <t t-if="o.purchase_id and o.move_line_ids">
                 <table class="table table-sm mt32">
                     <thead>
@@ -42,99 +52,36 @@
                     <tbody>
                         <tr>
                             <td class="text-right">
-                                <span t-esc="o.amount_untaxed"/>  <!-- with t-field is giving error -->
+                                <span
+                                    t-esc="o.amount_untaxed"
+                                />  <!-- with t-field is giving error -->
                             </td>
                             <td class="text-right">
-                                <span t-field="o.amount_tax"/>
+                                <span t-field="o.amount_tax" />
                             </td>
                             <td class="text-right">
-                                <span t-field="o.amount_total"/>
+                                <span t-field="o.amount_total" />
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </t>
-        </xpath>
-    </template>
-
-    <template id="stock_report_delivery_aggregated_move_lines"  inherit_id="stock.stock_report_delivery_aggregated_move_lines">
-
-        <xpath expr="//td[@name='move_line_aggregated_qty_done']" position="after">
-            <t t-if="o.purchase_id and o.move_line_ids">
-                <t t-if="o.state != 'done'">
-                    <td class="text-right">
-                        <span t-esc="aggregated_lines[line]['product_uom_qty']"/>
-                        <span t-esc="aggregated_lines[line]['product_uom_id']"/>
-                    </td>
-                </t>
-                <td class="text-right">
-                    <span
-                            t-esc="aggregated_lines[line]['purchase_price_unit']"/>
-                </td>
-                <td class="text-right">
-                    <span
-                            t-esc="aggregated_lines[line]['purchase_price_subtotal']"/>
-                </td>
-                <td class="text-right">
-                    <span
-                            t-esc="aggregated_lines[line]['purchase_tax_description']"/>
-                </td>
-            </t>
-            <t t-if="o.is_internal_consumption">
-                <td>
-                    <span t-esc="round(aggregated_lines[line]['price_internal_consumption'], 2)"/>
-                </td>
-                <td>
-                        <span t-esc="round(aggregated_lines[line]['subtotal_internal_consumption'], 2)"/>
-                </td>
-            </t>
-        </xpath>
-    </template>
-
-    <template id="report_delivery_unit_price_document" inherit_id="stock.report_delivery_document">
-        <xpath expr="//th[@name='th_sm_quantity']" position="after">
-            <t t-if="o.is_internal_consumption">
-                <th>
-                    <strong>Unit Price</strong>
-                </th>
-                <th>
-                    <strong>Subtotal</strong>
-                </th>
-            </t>
-        </xpath>
-        <xpath expr="//tr[@t-foreach='lines']/td[2]" position="after">
-            <t t-if="o.is_internal_consumption">
-            <td>
-                <span t-esc="round(ml._get_unit_price_internal_consumption(), 2)"/>
-            </td>
-            <td>
-                    <span t-esc="round(ml.subtotal_internal_consumption, 2)"/>
-            </td>
-            </t>
-        </xpath>
-
-        <xpath expr="//th[@name='th_sml_quantity']" position="after">
-            <t t-if="o.is_internal_consumption">
-                <th>
-                    <strong>Unit Price</strong>
-                </th>
-                <th>
-                    <strong>Subtotal</strong>
-                </th>
-            </t>
-        </xpath>
-        <xpath expr="//table[@name='stock_move_line_table']" position="after">
             <t t-if="o.is_internal_consumption">
                 <div class="clearfix">
                     <div name="total" class="row">
-                        <div t-attf-class="#{'col-6' if report_type != 'html' else 'col-sm-7 col-md-6'} ml-auto">
-                            <table class="table table-sm" style="page-break-inside: avoid;">
+                        <div
+                            t-attf-class="#{'col-6' if report_type != 'html' else 'col-sm-7 col-md-6'} ml-auto"
+                        >
+                            <table
+                                class="table table-sm"
+                                style="page-break-inside: avoid;"
+                            >
                                 <tr class="border-black o_total" style="">
                                     <td>
                                         <strong>Total</strong>
                                     </td>
                                     <td class="text-right">
-                                        <span t-field="o.total_internal_consumption"/>
+                                        <span t-field="o.total_internal_consumption" />
                                     </td>
                                 </tr>
                             </table>
@@ -143,7 +90,59 @@
                 </div>
             </t>
         </xpath>
+    </template>
 
+    <template
+        id="stock_report_delivery_aggregated_move_lines"
+        inherit_id="stock.stock_report_delivery_aggregated_move_lines"
+    >
+        <xpath expr="//tr[@t-foreach='aggregated_lines']" position="inside">
+            <t t-if="o.purchase_id and o.move_line_ids">
+                <t t-if="o.state != 'done'">
+                    <td class="text-right">
+                        <span t-esc="aggregated_lines[line]['product_uom_qty']" />
+                        <span t-esc="aggregated_lines[line]['product_uom_id']" />
+                    </td>
+                </t>
+                <td class="text-right">
+                    <span t-esc="'%.2f' % aggregated_lines[line]['purchase_price_unit']" />
+                </td>
+                <td class="text-right">
+                    <span t-esc="'%.2f' % aggregated_lines[line]['purchase_price_subtotal']" />
+                </td>
+                <td class="text-right">
+                    <span t-esc="aggregated_lines[line]['purchase_tax_description']" />
+                </td>
+            </t>
+            <t t-if="o.is_internal_consumption">
+                <td>
+                    <span
+                        t-esc="round(aggregated_lines[line]['price_internal_consumption'], 2)"
+                    />
+                </td>
+                <td>
+                    <span
+                        t-esc="round(aggregated_lines[line]['subtotal_internal_consumption'], 2)"
+                    />
+                </td>
+            </t>
+        </xpath>
+    </template>
 
+    <template id="stock_report_delivery_has_serial_move_line"
+        inherit_id="stock.stock_report_delivery_has_serial_move_line">
+        <xpath expr="//td[@name='move_line_lot_qty_done']" position="after">
+            <t t-if="move_line.purchase_line">
+                <td class="text-right">
+                    <span t-esc="'%.2f' % move_line.purchase_price_unit" />
+                </td>
+                <td class="text-right">
+                    <span t-esc="'%.2f' % move_line.purchase_price_subtotal" />
+                </td>
+                <td class="text-right">
+                    <span t-esc="move_line.purchase_tax_description" />
+                </td>
+            </t>
+        </xpath>
     </template>
 </odoo>
