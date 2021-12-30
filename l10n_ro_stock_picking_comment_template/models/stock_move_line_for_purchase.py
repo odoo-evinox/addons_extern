@@ -100,19 +100,7 @@ class StockMoveLine(models.Model):
                 )
 
     def _get_aggregated_product_quantities(self, **kwargs):
-        installed = (
-            self.env["ir.module.module"]
-            .sudo()
-            .search(
-                [
-                    ("name", "=", "stock_picking_report_valued"),
-                    ("state", "=", "installed"),
-                ]
-            )
-        )
-        if installed:
-            return super()._get_aggregated_product_quantities(**kwargs)
-        elif self.picking_id.purchase_id:
+        if self.picking_id.purchase_id:
             aggregated_move_lines = {}
             for move_line in self:
                 name = move_line.product_id.display_name
@@ -193,6 +181,19 @@ class StockMoveLine(models.Model):
                     ] += move_line.subtotal_internal_consumption
 
             return aggregated_move_lines
+        else:
+            installed = (
+                self.env["ir.module.module"]
+                .sudo()
+                .search(
+                    [
+                        ("name", "=", "stock_picking_report_valued"),
+                        ("state", "=", "installed"),
+                    ]
+                )
+            )
+            if installed:
+                return super()._get_aggregated_product_quantities(**kwargs)
         return {}
 
     def _get_unit_price_internal_consumption(self):
