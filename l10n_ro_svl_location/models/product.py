@@ -60,7 +60,7 @@ class ProductProduct(models.Model):
             ]
 
             if self._context.get('location_id'):
-                candidates_domain.append('location_dest_id', '=', self._context['location_id'])
+                candidates_domain.append(('location_dest_id', '=', self._context['location_id']))
 
             candidates = self.env['stock.valuation.layer'].sudo().search(candidates_domain)
             #----------
@@ -70,7 +70,7 @@ class ProductProduct(models.Model):
             #customized
             new_standard_price_avg = 0
             if candidates and 'average_cost_method_change' in self._context:
-                new_standard_price_avg = sum([cnd.remaining_value for cnd in candidates]) / sum([cnd.remaining_qty for cnd in candidates])
+                new_standard_price_avg = self._context['average_cost_method_change']
             #----------
 
             for candidate in candidates:
@@ -163,20 +163,32 @@ class ProductProduct(models.Model):
 
             for product in products:
                 prod = self.env['product.product'].browse(product['id'])
+
+                quant = self.env['stock.quant'].search([('location_id', '=', location.id),
+                                                        ('product_id', '=', prod.id)])
+                if quant:
+                    products_orig_quantity_svl[product['id']].append([location.id, sum(quant.mapped('quantity'))])
+
                 if float_is_zero(prod.quantity_svl, precision_rounding=prod.uom_id.rounding):
                     continue
 
                 impacted_product_ids.append(product['id'])
-                products_orig_quantity_svl[product['id']].append([location.id, product['quantity_svl']])
+                
 
             impacted_products |= self.env['product.product'].browse(impacted_product_ids)
-
             # empty out the stock for the impacted products
             for product in impacted_products:
 
+                quant = self.env['stock.quant'].search([('location_id', '=', location.id),
+                                                        ('product_id', '=', product.id)])
+                if not quant:
+                    continue
+
+                quant_avg = sum(quant.mapped('value')) / sum(quant.mapped('quantity'))
+
                 product = product.with_context(
                     location_id=location.id, 
-                    average_cost_method_change=True
+                    average_cost_method_change=quant_avg
                     )
 
                 # FIXME sle: why not use products_orig_quantity_svl here?
