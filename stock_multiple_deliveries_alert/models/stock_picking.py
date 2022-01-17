@@ -22,7 +22,7 @@ class StockPicking(models.Model):
 #    @api.depends()#'state','date_done','picking_type_code','partner_id'
     def _get_same_day_deliveries(self):
         for rec in self:
-            if rec.picking_type_code != 'outgoing':
+            if rec.picking_type_code != 'outgoing' or not rec.partner_id:
                 rec.other_unfinished_deliveries_ids = False
                 rec.finished_deliveries_same_day_ids = False
             else:
