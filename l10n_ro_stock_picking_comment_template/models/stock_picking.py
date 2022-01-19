@@ -124,6 +124,17 @@ class StockPicking(models.Model):
                         "amount_total": amount_untaxed + amount_tax,
                     }
                 )
+            else:
+                currency = pick.company_id.currency_id
+                pick.update(
+                    {
+                        "currency_id": currency.id,
+                        "amount_untaxed": 0.0,
+                        "amount_tax": 0.0,
+                        "amount_total": 0.0,
+                    }
+                )
+
 
     def get_taxes_values_purchase(self):
         tax_grouped = {}
