@@ -18,7 +18,6 @@ class StockPicking(models.Model):
         for picking in self:
             picking.date = picking.scheduled_date
 
-
     def _action_done(self):
         """Update date_done from date field """
         res = super()._action_done()
