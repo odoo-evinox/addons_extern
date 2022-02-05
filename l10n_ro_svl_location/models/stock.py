@@ -4,6 +4,10 @@
 
 
 from odoo import api, fields, models
+from odoo.tools import float_is_zero
+
+import logging
+_logger = logging.getLogger(__name__)
 
 
 class StockQuant(models.Model):
@@ -45,11 +49,21 @@ class StockValuationLayer(models.Model):
         return records
 
 
-
-
 class StockMove(models.Model):
     _inherit = "stock.move"
 
-    def _prepare_common_svl_vals(self):
-        self = self.with_context(location_id=self.location_id.id)
-        return super()._prepare_common_svl_vals()
+
+    def _create_out_svl(self, forced_quantity=None):
+        svls = self.env["stock.valuation.layer"]
+        for move in self:
+            move = move.with_context(location_id=move.location_id.id)
+            svls |= super(StockMove, move)._create_out_svl(forced_quantity=forced_quantity)
+        return svls
+
+    def _create_internal_transfer_svl(self, forced_quantity=None):
+        svls = self.env["stock.valuation.layer"]
+        for move in self:
+            move = move.with_context(location_id=move.location_id.id)
+            svls |= super(StockMove, move)._create_internal_transfer_svl(forced_quantity=forced_quantity)
+        return svls
+        

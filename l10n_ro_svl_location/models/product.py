@@ -6,6 +6,9 @@ from odoo import api, fields, models
 from collections import defaultdict
 from odoo.tools import float_is_zero
 
+import logging
+_logger = logging.getLogger(__name__)
+
 
 class ProductProduct(models.Model):
     _inherit = "product.product"
@@ -48,7 +51,7 @@ class ProductProduct(models.Model):
     def _run_fifo(self, quantity, company):
         self.ensure_one()
 
-        if self._context.get('location_id') or self._context.get('average_cost_method_change'):
+        if self.env.context.get('location_id') or self.env.context.get('average_cost_method_change'):
             # Find back incoming stock valuation layers (called candidates here) to value `quantity`.
             qty_to_take_on_candidates = quantity
 
@@ -59,8 +62,9 @@ class ProductProduct(models.Model):
                 ('company_id', '=', company.id),
             ]
 
-            if self._context.get('location_id'):
-                candidates_domain.append(('location_dest_id', '=', self._context['location_id']))
+            if self.env.context.get('location_id'):
+                candidates_domain.append(('location_dest_id', '=', self.env.context['location_id']))
+
 
             candidates = self.env['stock.valuation.layer'].sudo().search(candidates_domain)
             #----------
@@ -69,8 +73,8 @@ class ProductProduct(models.Model):
             tmp_value = 0  # to accumulate the value taken on the candidates
             #customized
             new_standard_price_avg = 0
-            if candidates and 'average_cost_method_change' in self._context:
-                new_standard_price_avg = self._context['average_cost_method_change']
+            if candidates and 'average_cost_method_change' in self.env.context:
+                new_standard_price_avg = self.env.context['average_cost_method_change']
             #----------
 
             for candidate in candidates:
@@ -101,8 +105,13 @@ class ProductProduct(models.Model):
             # Update the standard price with the price of the last used candidate, if any.
              ## customized
             if new_standard_price and self.cost_method == 'fifo':
-                self.sudo().with_company(company.id).with_context(
-                    disable_auto_svl=True).standard_price = new_standard_price_avg
+                if 'average_cost_method_change' in self.env.context:
+                    self.sudo().with_company(company.id).with_context(
+                        disable_auto_svl=True).standard_price = new_standard_price_avg
+                else:
+                    new_standard_price_avg = new_standard_price
+                    self.sudo().with_company(company.id).with_context(
+                        disable_auto_svl=True).standard_price = new_standard_price                    
             #-------------
 
             # If there's still quantity to value but we're out of candidates, we fall in the
@@ -158,8 +167,7 @@ class ProductProduct(models.Model):
         empty_stock_svl_list = []       
         for location in locations:
 
-            products = self.env['product.product'].with_context(
-                location_id=location.id).search_read(domain, ['quantity_svl'])
+            products = self.env['product.product'].search_read(domain, ['quantity_svl'])
 
             for product in products:
                 prod = self.env['product.product'].browse(product['id'])
@@ -178,23 +186,18 @@ class ProductProduct(models.Model):
             impacted_products |= self.env['product.product'].browse(impacted_product_ids)
             # empty out the stock for the impacted products
             for product in impacted_products:
-
-                quant = self.env['stock.quant'].search([('location_id', '=', location.id),
-                                                        ('product_id', '=', product.id)])
-                if not quant:
-                    continue
-
-                quant_avg = sum(quant.mapped('value')) / sum(quant.mapped('quantity'))
+                avg = product.value_svl / product.quantity_svl
 
                 product = product.with_context(
                     location_id=location.id, 
-                    average_cost_method_change=quant_avg
+                    average_cost_method_change=avg
                     )
 
                 # FIXME sle: why not use products_orig_quantity_svl here?
                 if float_is_zero(product.quantity_svl, precision_rounding=product.uom_id.rounding):
                     # FIXME: create an empty layer to track the change?
                     continue
+
 
                 svsl_vals = product._prepare_out_svl_vals(product.quantity_svl, self.env.company)
                 svsl_vals['description'] = description + svsl_vals.pop('rounding_adjustment', '')

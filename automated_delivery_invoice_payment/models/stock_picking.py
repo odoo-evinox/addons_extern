@@ -22,7 +22,7 @@ class StockPicking(models.Model):
             
                                  )
         res =  super(StockPicking,self).button_validate()
-        if res == True:
+        if res == True and not self.env.context.get('skip_create_invoice_after_transfer'):
             for rec in self.sudo(): # sudo neccesary because not all inventory workers have also accounting rights
                 if rec.sale_id and rec.sale_id.invoice_status == "to invoice":  
                     paid_less, paid_more= 0,0
