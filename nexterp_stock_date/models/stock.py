@@ -135,7 +135,7 @@ class StockValuationLayer(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for values in vals_list:
-            val_date = datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S")
+            val_date = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
             if values.get("stock_move_id"):
                 move = self.env["stock.move"].browse(values["stock_move_id"])
                 val_date = move.get_move_date()
@@ -151,5 +151,5 @@ class StockValuationLayer(models.Model):
         if not vals.get('write_uid'):
             vals['write_uid'] = self._uid
         if not vals.get('write_date'):
-            vals['write_date'] = datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S")
+            vals['write_date'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         return super().write(vals)
