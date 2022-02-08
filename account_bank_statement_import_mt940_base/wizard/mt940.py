@@ -289,7 +289,7 @@ class MT940Parser(models.AbstractModel):
             transaction["amount"] = self.parse_amount(
                 parsed_data["sign"], parsed_data["amount"]
             )
-            transaction["note"] = parsed_data["reference"]
+            transaction["ref"] = parsed_data["reference"]
         return result
 
     def handle_tag_62M(self, data, result):
