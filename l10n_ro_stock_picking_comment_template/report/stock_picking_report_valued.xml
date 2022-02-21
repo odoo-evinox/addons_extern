@@ -81,7 +81,7 @@
                                         <strong>Total</strong>
                                     </td>
                                     <td class="text-right">
-                                        <span t-field="o.total_internal_consumption" />
+                                        <span t-esc="round(o.total_internal_consumption, 2)" />
                                     </td>
                                 </tr>
                             </table>
