@@ -13,7 +13,6 @@ _logger = logging.getLogger(__name__)
 class StockQuant(models.Model):
     _inherit = "stock.quant"
 
-
     @api.depends("company_id", "location_id", "owner_id", "product_id", "quantity")
     def _compute_value(self):
         quants_with_loc = self.filtered(lambda q: q.location_id)
@@ -51,7 +50,6 @@ class StockValuationLayer(models.Model):
 
 class StockMove(models.Model):
     _inherit = "stock.move"
-
 
     def _create_out_svl(self, forced_quantity=None):
         svls = self.env["stock.valuation.layer"]
