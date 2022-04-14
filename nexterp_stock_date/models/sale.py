@@ -14,11 +14,6 @@ class SaleOrder(models.Model):
             res.pop("date_order")
         return res
 
-    def _prepare_invoice(self):
-        res = super()._prepare_invoice()
-        res["invoice_date"] = self.date_order
-        return res
-
 
 class SaleOrderLine(models.Model):
     _inherit = "sale.order.line"
