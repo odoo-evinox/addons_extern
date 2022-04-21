@@ -41,6 +41,6 @@ class OnPaymentController(http.Controller):
         '/payment/on_credit/feedback',
     ], type='http', auth='public', csrf=False)
     def transfer_form_feedback(self, **post):
-        _logger.info('Beginning form_feedback with post data %s', pprint.pformat(post))  # debug
+        #_logger.info('Beginning form_feedback with post data %s', pprint.pformat(post))  # debug
         request.env['payment.transaction'].sudo().form_feedback(post, 'on_credit')
         return werkzeug.utils.redirect('/payment/process')

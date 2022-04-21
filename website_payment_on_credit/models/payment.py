@@ -45,7 +45,7 @@ class OnCreditTransaction(models.Model):
                 error_msg += _('; no order found')
             else:
                 error_msg += _('; multiple order found')
-            _logger.info(error_msg)
+            #_logger.info(error_msg)
             raise ValidationError(error_msg)
 
         return tx
@@ -61,7 +61,7 @@ class OnCreditTransaction(models.Model):
         return invalid_parameters
 
     def _on_credit_form_validate(self, data):  # why is not getting here
-        _logger.info('Validated on_credit payment for tx %s: set as pending' % (self.reference))
+        #_logger.info('Validated on_credit payment for tx %s: set as pending' % (self.reference))
 
         if not self.acquirer_id.capture_manually:
             self._set_transaction_authorized()
@@ -73,10 +73,10 @@ class OnCreditTransaction(models.Model):
         allowed_states = ('draft', 'authorized', 'pending', 'error')
         target_state = 'on_credit'
         (tx_to_process, tx_already_processed, tx_wrong_state) = self._filter_transaction_state(allowed_states, target_state)
-        for tx in tx_already_processed:
-            _logger.info('Trying to write the same state twice on tx (ref: %s, state: %s' % (tx.reference, tx.state))
-        for tx in tx_wrong_state:
-            _logger.warning('Processed tx with abnormal state (ref: %s, target state: %s, previous state %s, expected previous states: %s)' % (tx.reference, target_state, tx.state, allowed_states))
+        # for tx in tx_already_processed:
+            # _logger.info('Trying to write the same state twice on tx (ref: %s, state: %s' % (tx.reference, tx.state))
+        # for tx in tx_wrong_state:
+            # _logger.warning('Processed tx with abnormal state (ref: %s, target state: %s, previous state %s, expected previous states: %s)' % (tx.reference, target_state, tx.state, allowed_states))
 
         tx_to_process.write({
             'state': target_state,
