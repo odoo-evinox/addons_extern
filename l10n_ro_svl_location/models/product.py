@@ -71,12 +71,12 @@ class ProductProduct(models.Model):
             # If no candidates in main location, search for sublocations
             if not candidates and self.env.context.get('location_id'):
                 location = self.env['stock.location'].browse(self.env.context['location_id'])
-                child_locations = location.child_ids.ids
+                child_locations = self.env['stock.location'].search([('location_id', 'child_of', location.id)])
                 candidates_domain = [
                     ('product_id', '=', self.id),
                     ('remaining_qty', '>', 0),
                     ('company_id', '=', company.id),
-                    ('location_dest_id', 'in', child_locations)
+                    ('location_dest_id', 'in', child_locations.ids)
                 ]
                 candidates = self.env['stock.valuation.layer'].sudo().search(candidates_domain)
             #----------
