@@ -100,6 +100,17 @@ class StockMoveLine(models.Model):
                 )
 
     def _get_aggregated_product_quantities(self, **kwargs):
+        delivery_installed = (
+                self.env["ir.module.module"]
+                .sudo()
+                .search(
+                    [
+                        ("name", "=", "delivery"),
+                        ("state", "=", "installed"),
+                    ]
+                )
+            )
+
         if self.picking_id.purchase_id:
             aggregated_move_lines = {}
             for move_line in self:
@@ -139,6 +150,8 @@ class StockMoveLine(models.Model):
                     aggregated_move_lines[line_key][
                         "purchase_price_tax"
                     ] += move_line.purchase_price_tax
+                if delivery_installed:
+                    aggregated_move_lines[line_key].update(hs_code=move_line.product_id.hs_code)
 
             return aggregated_move_lines
         elif self.picking_id.is_internal_consumption:
@@ -179,10 +192,12 @@ class StockMoveLine(models.Model):
                     aggregated_move_lines[line_key][
                         "subtotal_internal_consumption"
                     ] += move_line.subtotal_internal_consumption
+                if delivery_installed:
+                    aggregated_move_lines[line_key].update(hs_code=move_line.product_id.hs_code)
 
             return aggregated_move_lines
         else:
-            installed = (
+            sprv_installed = (
                 self.env["ir.module.module"]
                 .sudo()
                 .search(
@@ -192,7 +207,7 @@ class StockMoveLine(models.Model):
                     ]
                 )
             )
-            if installed:
+            if sprv_installed:
                 return super()._get_aggregated_product_quantities(**kwargs)
         return {}
 
