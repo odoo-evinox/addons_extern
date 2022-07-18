@@ -27,8 +27,12 @@
         <field name="inherit_id" ref="stock.view_picking_internal_search"/>
         <field name="arch" type="xml">
             <filter name="expected_date" position="after">
-                <filter string="Date" name="date" domain="[]" context="{'group_by': 'date'}"/>
+                <filter string="Accounting Date" name="date" domain="[]" context="{'group_by': 'date'}"/>
             </filter>
+            <filter name="expected_date" position="after">
+                <filter string="Done Date" name="date_done" domain="[]" context="{'group_by': 'date_done'}"/>
+            </filter>
+
         </field>
     </record>
 </odoo>

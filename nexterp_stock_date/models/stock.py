@@ -1,28 +1,34 @@
-# Copyright (C) 2021 NextERP Romania SRL
+# Copyright (C) 2021-2022 NextERP Romania SRL
 # License OPL-1.0 or later
 # (https://www.odoo.com/documentation/user/14.0/legal/licenses/licenses.html#).
 
-from datetime import datetime
-
-from odoo import api, fields, models
-
+from datetime import timedelta
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
 
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
-    date = fields.Datetime('Processing Date')
+    date = fields.Datetime('Accounting Date', copy=False,
+                    help="If this field is set, the svl and accounting entiries will "
+                    "have this date, If not will have the today date as it should be")
 
-    @api.depends('move_lines.state', 'move_lines.date', 'move_type')
-    def _compute_scheduled_date(self):
-        super()._compute_scheduled_date()
-        for picking in self:
-            picking.date = picking.scheduled_date
+# this in wrong is changing all the time picking.date
+    # @api.depends('move_lines.state', 'move_lines.date', 'move_type')
+    # def _compute_scheduled_date(self):
+        # super()._compute_scheduled_date()
+        # for picking in self:
+            # if not picking.date:
+                # picking.date = picking.scheduled_date
 
     def _action_done(self):
         """Update date_done from date field """
         res = super()._action_done()
         for picking in self:
-            picking.date_done = picking.date
+            if picking.date:
+                if picking.date > fields.datetime.now() + timedelta(days=1):
+                    raise ValidationError(_("You can not have a Accounting date=%s for picking bigger than today!" % picking.date))
+                picking.date_done = picking.date
         return res
 
 
@@ -33,7 +39,10 @@ class StockMove(models.Model):
         self.ensure_one()
         new_date = self.date
         if self.picking_id:
-            new_date = self.picking_id.date
+            if self.picking_id.date:
+                new_date = self.picking_id.date
+            else:
+                new_date = fields.datetime.now()
         elif self.inventory_id:
             new_date = self.inventory_id.accounting_date
         elif "raw_material_production_id" in self._fields:
@@ -79,13 +88,13 @@ class StockMove(models.Model):
                     price_unit,
                     order.company_id.currency_id,
                     self.company_id,
-                    self.picking_id.date,
+                    self.picking_id.date or fields.datetime.now(),
                     round=False,
                 )
             self.write(
                 {
                     "price_unit": price_unit,
-                    "date": self.picking_id.date,
+                    "date": self.picking_id.date or fields.datetime.now(),
                 }
             )
             return price_unit
@@ -131,11 +140,14 @@ class StockValuationLayer(models.Model):
     create_uid = fields.Many2one('res.users', 'Created by', index=True, readonly=True)
     write_date = fields.Datetime('Last Updated on', index=True, readonly=True)
     write_uid = fields.Many2one('res.users', 'Last Updated by', index=True, readonly=True)
+    create_date_in_reality = fields.Datetime(readonly=True, 
+        help="the date when this recod was created. Original create_date is writen"
+        " at reception by module nexterp_stock_date")
 
     @api.model_create_multi
     def create(self, vals_list):
         for values in vals_list:
-            val_date = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            val_date = fields.datetime.now()
             if values.get("stock_move_id"):
                 move = self.env["stock.move"].browse(values["stock_move_id"])
                 val_date = move.get_move_date()
@@ -144,6 +156,7 @@ class StockValuationLayer(models.Model):
                 "create_date": val_date,
                 'write_uid': self._uid,
                 'write_date': val_date,
+                "create_date_in_reality": fields.datetime.now(),
             })
         return super().create(vals_list)
 
@@ -151,5 +164,5 @@ class StockValuationLayer(models.Model):
         if not vals.get('write_uid'):
             vals['write_uid'] = self._uid
         if not vals.get('write_date'):
-            vals['write_date'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            vals['write_date'] = fields.datetime.now()
         return super().write(vals)
