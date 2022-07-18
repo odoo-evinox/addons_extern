@@ -141,7 +141,7 @@ class StockValuationLayer(models.Model):
     write_date = fields.Datetime('Last Updated on', index=True, readonly=True)
     write_uid = fields.Many2one('res.users', 'Last Updated by', index=True, readonly=True)
     create_date_in_reality = fields.Datetime(readonly=True, 
-        help="the date when this recod was created. Original create_date is writen"
+        help="If this field is set, is the date when this recod was created. Original create_date is writen"
         " at reception by module nexterp_stock_date")
 
     @api.model_create_multi
