@@ -9,26 +9,24 @@ from odoo.exceptions import ValidationError
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
-    date = fields.Datetime('Accounting Date', copy=False,
+    accounting_date = fields.Datetime('Accounting Date', copy=False,
                     help="If this field is set, the svl and accounting entiries will "
                     "have this date, If not will have the today date as it should be")
 
-# this in wrong is changing all the time picking.date
-    # @api.depends('move_lines.state', 'move_lines.date', 'move_type')
-    # def _compute_scheduled_date(self):
-        # super()._compute_scheduled_date()
-        # for picking in self:
-            # if not picking.date:
-                # picking.date = picking.scheduled_date
+    date_done_effective = fields.Datetime(copy=False,
+                    help="If this field is set, means that the picking was done"
+                    " in this date, and date_done is the accounting_date")
 
     def _action_done(self):
-        """Update date_done from date field """
+        """Update date_done from accounting_date field """
         res = super()._action_done()
         for picking in self:
-            if picking.date:
-                if picking.date > fields.datetime.now() + timedelta(days=1):
+            if picking.accounting_date:
+                if picking.accounting_date > fields.datetime.now() + timedelta(days=1):
                     raise ValidationError(_("You can not have a Accounting date=%s for picking bigger than today!" % picking.date))
-                picking.date_done = picking.date
+                picking.write({
+                    "date_done": picking.accounting_date,
+                    "date_done_effective": fields.datetime.now()})
         return res
 
 
@@ -39,8 +37,8 @@ class StockMove(models.Model):
         self.ensure_one()
         new_date = self.date
         if self.picking_id:
-            if self.picking_id.date:
-                new_date = self.picking_id.date
+            if self.picking_id.accounting_date:
+                new_date = self.picking_id.accounting_date
             else:
                 new_date = fields.datetime.now()
         elif self.inventory_id:
@@ -88,13 +86,13 @@ class StockMove(models.Model):
                     price_unit,
                     order.company_id.currency_id,
                     self.company_id,
-                    self.picking_id.date or fields.datetime.now(),
+                    self.picking_id.accounting_date or fields.datetime.now(),
                     round=False,
                 )
             self.write(
                 {
                     "price_unit": price_unit,
-                    "date": self.picking_id.date or fields.datetime.now(),
+                    "date": self.picking_id.accounting_date or fields.datetime.now(),
                 }
             )
             return price_unit

@@ -5,7 +5,8 @@
         <field name="inherit_id" ref="stock.vpicktree"/>
         <field name="arch" type="xml">
             <field name="scheduled_date" position="after">
-                <field name="date" readonly="1"/>
+                <field name="date_done" readonly="1"/>
+                <field name="accounting_date" readonly="1"/>
             </field>
         </field>
     </record>
@@ -16,8 +17,12 @@
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
             <field name="date_deadline" position="after">
-                <field name="date" attrs="{'readonly': [('state', 'in', ('done', 'cancel')),]}"/>
+                <field name="accounting_date" attrs="{'readonly': [('state', 'in', ('done', 'cancel')),]}"/>
             </field>
+            <field name="date_done" position="after">
+                <field name="date_done_effective" attrs="{'readonly': 1, 'invisible':[('date_done_effective', '=', False)]}"/>
+            </field>
+
         </field>
     </record>
 
@@ -27,7 +32,7 @@
         <field name="inherit_id" ref="stock.view_picking_internal_search"/>
         <field name="arch" type="xml">
             <filter name="expected_date" position="after">
-                <filter string="Accounting Date" name="date" domain="[]" context="{'group_by': 'date'}"/>
+                <filter string="Accounting Date" name="accounting_date" domain="[]" context="{'group_by': 'accounting_date'}"/>
             </filter>
             <filter name="expected_date" position="after">
                 <filter string="Done Date" name="date_done" domain="[]" context="{'group_by': 'date_done'}"/>
