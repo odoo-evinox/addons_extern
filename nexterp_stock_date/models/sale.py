@@ -5,6 +5,7 @@
 
 from odoo import models
 
+
 class SaleOrder(models.Model):
     _inherit = "sale.order"
 
@@ -19,8 +20,7 @@ class SaleOrderLine(models.Model):
     _inherit = "sale.order.line"
 
     def _prepare_procurement_values(self, group_id=False):
-        """ Update date planned with the one from sale order.
-        """
+        """Update date planned with the one from sale order."""
         values = super(SaleOrderLine, self)._prepare_procurement_values(group_id)
         if values.get("date_planned") != self.order_id.date_order:
             values["date_planned"] = self.order_id.date_order

@@ -6,27 +6,41 @@ from datetime import timedelta
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
+
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
-    accounting_date = fields.Datetime('Accounting Date', copy=False,
-                    help="If this field is set, the svl and accounting entiries will "
-                    "have this date, If not will have the today date as it should be")
+    accounting_date = fields.Datetime(
+        "Accounting Date",
+        copy=False,
+        help="If this field is set, the svl and accounting entiries will "
+        "have this date, If not will have the today date as it should be",
+    )
 
-    date_done_effective = fields.Datetime(copy=False,
-                    help="If this field is set, means that the picking was done"
-                    " in this date, and date_done is the accounting_date")
+    date_done_effective = fields.Datetime(
+        copy=False,
+        help="If this field is set, means that the picking was done"
+        " in this date, and date_done is the accounting_date",
+    )
 
     def _action_done(self):
-        """Update date_done from accounting_date field """
+        """Update date_done from accounting_date field"""
         res = super()._action_done()
         for picking in self:
             if picking.accounting_date:
                 if picking.accounting_date > fields.datetime.now() + timedelta(days=1):
-                    raise ValidationError(_("You can not have a Accounting date=%s for picking bigger than today!" % picking.date))
-                picking.write({
-                    "date_done": picking.accounting_date,
-                    "date_done_effective": fields.datetime.now()})
+                    raise ValidationError(
+                        _(
+                            "You can not have a Accounting date=%s for picking bigger than today!"
+                            % picking.date
+                        )
+                    )
+                picking.write(
+                    {
+                        "date_done": picking.accounting_date,
+                        "date_done_effective": fields.datetime.now(),
+                    }
+                )
         return res
 
 
@@ -102,7 +116,9 @@ class StockMove(models.Model):
         self.ensure_one()
         val_date = self.get_move_date()
         self = self.with_context(force_period_date=val_date)
-        return super(StockMove, self)._account_entry_move(qty, description, svl_id, cost)
+        return super(StockMove, self)._account_entry_move(
+            qty, description, svl_id, cost
+        )
 
 
 class StockMoveLine(models.Model):
@@ -134,13 +150,17 @@ class StockValuationLayer(models.Model):
     _inherit = "stock.valuation.layer"
     _log_access = False
 
-    create_date = fields.Datetime('Created on', index=True, readonly=True)
-    create_uid = fields.Many2one('res.users', 'Created by', index=True, readonly=True)
-    write_date = fields.Datetime('Last Updated on', index=True, readonly=True)
-    write_uid = fields.Many2one('res.users', 'Last Updated by', index=True, readonly=True)
-    create_date_in_reality = fields.Datetime(readonly=True, 
+    create_date = fields.Datetime("Created on", index=True, readonly=True)
+    create_uid = fields.Many2one("res.users", "Created by", index=True, readonly=True)
+    write_date = fields.Datetime("Last Updated on", index=True, readonly=True)
+    write_uid = fields.Many2one(
+        "res.users", "Last Updated by", index=True, readonly=True
+    )
+    create_date_in_reality = fields.Datetime(
+        readonly=True,
         help="If this field is set, is the date when this recod was created. Original create_date is writen"
-        " at reception by module nexterp_stock_date")
+        " at reception by module nexterp_stock_date",
+    )
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -149,18 +169,20 @@ class StockValuationLayer(models.Model):
             if values.get("stock_move_id"):
                 move = self.env["stock.move"].browse(values["stock_move_id"])
                 val_date = move.get_move_date()
-            values.update({
-                'create_uid': self._uid,
-                "create_date": val_date,
-                'write_uid': self._uid,
-                'write_date': val_date,
-                "create_date_in_reality": fields.datetime.now(),
-            })
+            values.update(
+                {
+                    "create_uid": self._uid,
+                    "create_date": val_date,
+                    "write_uid": self._uid,
+                    "write_date": val_date,
+                    "create_date_in_reality": fields.datetime.now(),
+                }
+            )
         return super().create(vals_list)
 
     def write(self, vals):
-        if not vals.get('write_uid'):
-            vals['write_uid'] = self._uid
-        if not vals.get('write_date'):
-            vals['write_date'] = fields.datetime.now()
+        if not vals.get("write_uid"):
+            vals["write_uid"] = self._uid
+        if not vals.get("write_date"):
+            vals["write_date"] = fields.datetime.now()
         return super().write(vals)
