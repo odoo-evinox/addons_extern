@@ -5,7 +5,7 @@
         <field name="priority">290</field>
         <field name="arch" type="xml">
             <field name="create_date" position="after">
-                <field name="create_date_in_reality"/>
+                <field name="date_done"/>
             </field>
         </field>
     </record>

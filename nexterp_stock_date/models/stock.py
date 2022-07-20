@@ -156,9 +156,9 @@ class StockValuationLayer(models.Model):
     write_uid = fields.Many2one(
         "res.users", "Last Updated by", index=True, readonly=True
     )
-    create_date_in_reality = fields.Datetime(
+    date_done = fields.Datetime(
         readonly=True,
-        help="If this field is set, is the date when this recod was created. Original create_date is writen"
+        help="This is the date when this recod was created. Original create_date is writen"
         " at reception by module nexterp_stock_date",
     )
 
@@ -175,7 +175,7 @@ class StockValuationLayer(models.Model):
                     "create_date": val_date,
                     "write_uid": self._uid,
                     "write_date": val_date,
-                    "create_date_in_reality": fields.datetime.now(),
+                    "date_done": fields.datetime.now(),
                 }
             )
         return super().create(vals_list)
