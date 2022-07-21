@@ -10,22 +10,19 @@ from odoo.exceptions import ValidationError
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
+    scheduled_date = fields.Datetime(tracking=True)
+    date_deadline = fields.Datetime(tracking=True)
+    date_done = fields.Datetime(tracking=True)
     accounting_date = fields.Datetime(
         "Accounting Date",
         copy=False,
         help="If this field is set, the svl and accounting entiries will "
         "have this date, If not will have the today date as it should be",
-    )
-
-    date_done_effective = fields.Datetime(
-        copy=False,
-        help="If this field is set, means that the picking was done"
-        " in this date, and date_done is the accounting_date",
+        tracking=True
     )
 
     def _action_done(self):
         """Update date_done from accounting_date field"""
-        res = super()._action_done()
         for picking in self:
             if picking.accounting_date:
                 if picking.accounting_date > fields.datetime.now() + timedelta(days=1):
@@ -37,10 +34,19 @@ class StockPicking(models.Model):
                     )
                 picking.write(
                     {
-                        "date_done": picking.accounting_date,
-                        "date_done_effective": fields.datetime.now(),
+                        "scheduled_date": picking.accounting_date,
                     }
                 )
+
+        res = super()._action_done()
+
+        for picking in self:
+            if picking.accounting_date:
+                picking.write(
+                    {
+                        "date_done": picking.accounting_date,
+                    }
+                )        
         return res
 
 
