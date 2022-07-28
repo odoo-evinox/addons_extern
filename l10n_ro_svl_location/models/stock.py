@@ -65,3 +65,10 @@ class StockMove(models.Model):
             svls |= super(StockMove, move)._create_internal_transfer_svl(forced_quantity=forced_quantity)
         return svls
         
+
+    def _action_done(self, cancel_backorder=False):
+        moves = super()._action_done(cancel_backorder=cancel_backorder)
+        for mv in moves:
+            mv.location_id = mv.move_line_ids[0].location_id
+            mv.location_dest_id = mv.move_line_ids[0].location_dest_id
+        return moves        
