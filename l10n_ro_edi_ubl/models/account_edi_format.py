@@ -19,7 +19,7 @@ class AccountEdiFormat(models.Model):
     ####################################################
 
     def _get_cius_ro_values(self, invoice):
-        values = super()._get_bis3_values(invoice)
+        values = self._get_bis3_values(invoice)
         values.update(
             {
                 "customization_id": "urn:cen.eu:en16931:2017"
@@ -232,3 +232,10 @@ class AccountEdiFormat(models.Model):
             doc = move._get_edi_document(self)
             doc.write({"attachment_id": attachment.id})
         return attachment.raw
+
+    def _get_bis3_values(self, invoice):
+        values = super()._get_bis3_values(invoice)
+        if values.get("customer_vals"):
+            values["customer_vals"].update({"legal_entity":values["customer_vals"]['bis3_endpoint'],
+                                            "legal_entity_scheme": ''})
+        return values

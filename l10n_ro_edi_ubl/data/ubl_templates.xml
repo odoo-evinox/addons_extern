@@ -8,6 +8,14 @@
         primary="True"
         priority="100"
     >
+            <xpath expr="//*[local-name()='PartyLegalEntity']/*[local-name()='CompanyID']" position="replace">
+                <cbc:CompanyID
+                xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+                xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+                    t-if="partner_vals.get('legal_entity')"
+                    t-esc="partner_vals['legal_entity']"/>
+            </xpath>
+
             <xpath expr="//*[local-name()='CountrySubentity']" position="replace">
                 <cbc:CountrySubentity
                 xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
@@ -39,15 +47,16 @@
                 xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
             >
                     <cbc:CompanyID
-                    t-esc="partner.country_id.code+partner.vat.replace(partner.country_id.code,'')"
+                    t-esc="partner.vat"
                 />
                     <cac:TaxScheme>
-                        <cbc:ID>VAT</cbc:ID>
+                        <t t-if="not partner.vat[:2].isdigit()"><cbc:ID>VAT</cbc:ID></t>
                     </cac:TaxScheme>
                 </cac:PartyTaxScheme>
 
 
             </xpath>
+
         </template>
 
 
@@ -84,6 +93,26 @@
                 </cac:AccountingCustomerParty>
             </xpath>
 
+            <xpath expr="//*[local-name()='PaymentMeans']/*[local-name()='PayeeFinancialAccount']" position="inside">
+                <cac:FinancialInstitutionBranch t-if="record.partner_bank_id.bank_bic"
+                xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+                xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+                xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+                        <cbc:ID><t t-esc="record.partner_bank_id.bank_bic"/></cbc:ID>
+                </cac:FinancialInstitutionBranch>
+            </xpath>
+            <xpath
+                expr="//*[local-name()='OrderReference']"
+                position="replace"
+            >
+                <cac:OrderReference
+                xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+                xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+                xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+            >
+                    <cbc:ID><t t-esc="(record.ref or record.name)[:30]" /></cbc:ID>
+                </cac:OrderReference>
+            </xpath>
 
         </template>
 
