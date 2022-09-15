@@ -238,4 +238,16 @@ class AccountEdiFormat(models.Model):
         if values.get("customer_vals"):
             values["customer_vals"].update({"legal_entity":values["customer_vals"]['bis3_endpoint'],
                                             "legal_entity_scheme": ''})
+        tax_values = values["tax_details"]["tax_details"]
+        amount = 0
+        for tax_value in tax_values:
+            tax_group = tax_values[tax_value]['group_tax_details'][0]['base_line_id'].move_id.amount_by_group
+            for tax in tax_group:
+                if tax[0] == tax_values[tax_value]['group_tax_details'][0]["tax_id"].tax_group_id.name:
+                    tax_values[tax_value]['tax_amount'] = (-1) * tax[1] if tax[1] > 0 else tax[1]
+                    tax_values[tax_value]['tax_amount_currency'] = (-1) * tax[1] if tax[1] > 0 else tax[1]
+                    tax_values[tax_value]['base_amount'] = (-1) * tax[2] if tax[2] > 0 else tax[2]
+                    tax_values[tax_value]['base_amount_currency'] = (-1) * tax[2] if tax[2] > 0 else tax[2]
+                    amount += tax_values[tax_value]['tax_amount_currency']
+        values["tax_details"]['tax_amount_currency'] = amount
         return values
