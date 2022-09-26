@@ -5,7 +5,6 @@
     'category': 'Banking addons',
     'summary': 'Romania - Import bank statements from BRD',
     'depends': ['account_bank_statement_import_mt940_base'],
-    'demo': ['demo/demo_data.xml'],
     'license': 'AGPL-3',
     'version': '14.0.1.0.0',
     'author': 'NextERP Romania,'
