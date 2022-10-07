@@ -7,5 +7,6 @@ class AccountMove(models.Model):
 
     def action_post(self):
         for rec in self:
-            rec.partner_id.check_over_credit_limit(with_this_sum = rec.amount_total_signed)
+            if rec.partner_id:
+                rec.partner_id.check_over_credit_limit(with_this_sum=rec.amount_total_signed)
         return super().action_post()
