@@ -68,9 +68,11 @@ class SFTPServer(models.Model):
         sftp_client.putfo(fileObj, os.path.basename(filename), confirm=False)
         self._close_sftp_client(sftp_client)
 
-    def get_file_list_from_sftp(self, filepath):
+    def get_file_list_from_sftp(self, filepath, sftp_client=None):
         _logger.info(">ls %s", filepath)
-        sftp_client = self._open_sftp_client()
+        close_sftp_client = not bool(sftp_client)
+        if not sftp_client:
+            sftp_client = self._open_sftp_client()
         if type(sftp_client) is str:
             _logger.error(sftp_client)
             self.errors = sftp_client + self.errors
@@ -88,7 +90,8 @@ class SFTPServer(models.Model):
             lstat = sftp_client.lstat(filepath + "/" + fname)
             if "d" not in str(lstat).split()[0]:  # do not take directories
                 filename_list.append(fname)
-        self._close_sftp_client(sftp_client)
+        if close_sftp_client:
+            self._close_sftp_client(sftp_client)                
         return filename_list
 
     def move_files_on_sftp(self, files, destination_path):
