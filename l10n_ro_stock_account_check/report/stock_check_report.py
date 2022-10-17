@@ -11,7 +11,7 @@ _logger = logging.getLogger(__name__)
 
 
 class StockAccountingCheck(models.TransientModel):
-    _name = "stock.accounting.check"
+    _name = "l10n.ro.stock.accounting.check"
     _description = "StockAccountingCheck"
 
     # Filters fields, used for data computation
@@ -22,7 +22,7 @@ class StockAccountingCheck(models.TransientModel):
     date_from = fields.Date("Start Date", required=True, default=fields.Date.today)
     date_to = fields.Date("End Date", required=True, default=fields.Date.today)
 
-    line_ids = fields.One2many("stock.accounting.check.line", "report_id")
+    line_ids = fields.One2many("l10n.ro.stock.accounting.check.line", "report_id")
 
     @api.model
     def default_get(self, fields_list):
@@ -131,11 +131,11 @@ class StockAccountingCheck(models.TransientModel):
 
 
 class StockAccountingCheckLine(models.TransientModel):
-    _name = "stock.accounting.check.line"
+    _name = "l10n.ro.stock.accounting.check.line"
     _description = "StockAccountingCheckLine"
     _order = "report_id"
 
-    report_id = fields.Many2one("stock.accounting.check")
+    report_id = fields.Many2one("l10n.ro.stock.accounting.check")
     stock_valuation_layer_id = fields.Many2one("stock.valuation.layer")
     product_id = fields.Many2one("product.product", string="Product")
     location_id = fields.Many2one("stock.location", string="Source")
