@@ -90,4 +90,4 @@ class MrpProduction(models.Model):
 
     @api.model
     def _get_popup_action(self):
-        return self.env.ref("mrp_exception.action_mrp_exception_confirm")
+        return self.env.ref("mrp_exception.action_mrp_exception_confirm").sudo()
