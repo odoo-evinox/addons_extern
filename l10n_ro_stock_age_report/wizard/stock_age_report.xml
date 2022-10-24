@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="svl_age_report_form_view" model="ir.ui.view">
+        <field name="name">svl.age.report.form</field>
+        <field name="model">l10n.ro.svl.age.report</field>
+        <field name="arch" type="xml">
+            <form string="Stock Age Report">
+                <group name="filters">
+                    <field name="company_id" readonly="1"/>                    
+                    <field name="warehouse_id"/>                                        
+                    <field name="product_id"/>
+                    <field name="date_ref"/>
+                    <field name="interval_days"/>                    
+                </group>
+                <notebook>
+                    <sheet>
+                        <group>
+                            <field name="location_ids">
+                                <tree editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="location_id" domain="[('usage', '=', 'internal')]"/>
+                                </tree>
+
+                            </field>
+                        </group>
+                    </sheet>
+                </notebook>
+                <footer>
+                    <button name="button_show_sheet" string="Compute Age Report" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel" />
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_age_report_line_pivot" model="ir.ui.view">
+        <field name="name">svl.age.report.line.pivot</field>
+        <field name="model">l10n.ro.svl.age.report.line</field>
+        <field name="arch" type="xml">
+            <pivot default_order="date desc" 
+                string="Stock Age Report" 
+                disable_linking="True" 
+                sample="1">
+                <field name="date" type="col" interval="day"/>  
+                <field name="quantity" type="measure" />
+                <field name="value" type="measure" />                              
+                <field name="product_id" type="row" />
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_age_report_line_tree" model="ir.ui.view">
+        <field name="name">svl.age.report.line.tree</field>
+        <field name="model">l10n.ro.svl.age.report.line</field>
+        <field name="arch" type="xml">
+            <tree string="Stock Age Report" edit="0" create="0" import="0">
+                <field name="date"/>                
+                <field name="product_id" />
+                <field name="account_id"/>                
+                <field name="internal_reference" />
+                <field name="product_uom"/>
+                <field name="quantity" />
+                <field name="value"/>
+            </tree>
+        </field>
+    </record>    
+
+
+    <record id="view_age_report_line_search" model="ir.ui.view">
+        <field name="name">svl.age.report.line.search</field>
+        <field name="model">l10n.ro.svl.age.report.line</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="product_id" />
+                <field name="account_id" />
+                <group expand="1" string="Group by">
+                    <filter
+                        string="Product"
+                        name="group_by_product"
+                        context="{'group_by': 'product_id'}"
+                    />                    
+                    <filter
+                        string="Date"
+                        name="group_by_date"
+                        context="{'group_by': 'date'}"
+                    />
+                    <filter
+                        string="Account"
+                        name="group_by_account"
+                        context="{'group_by': 'account_id'}"
+                    />                        
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_stock_age_report" model="ir.actions.act_window">
+        <field name="name">Stock Age Report</field>
+        <field name="res_model">l10n.ro.svl.age.report</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="l10n_ro_stock_age_report.svl_age_report_form_view" />        
+        <field name="target">new</field>
+    </record>
+
+    <record id="menu_svl_age_report" model="ir.ui.menu">
+        <field name="name">Romanian Stock Age Report</field>
+        <field name="action" ref="action_stock_age_report" />
+        <field name="parent_id" ref="stock.menu_warehouse_report" />
+        <field name="groups_id" eval="[(4, ref('stock.group_stock_user'))]" />
+        <field name="is_l10n_ro_record" eval="True" />
+    </record>
+
+    <record id="action_sheet_age_report_line" model="ir.actions.act_window">
+        <field name="name">Stock Age Report</field>
+        <field name="res_model">l10n.ro.svl.age.report.line</field>
+        <field name="view_mode">pivot,tree</field>
+        <field name="domain">[('report_id','=',active_id)]</field>
+         <field name="context">'group_by':['date']}</field>        
+        <field
+            name="view_id"
+            ref="l10n_ro_stock_age_report.view_age_report_line_pivot"
+        />
+    </record>
+
+
+</odoo>
