@@ -43,6 +43,7 @@
                 disable_linking="True" 
                 sample="1">
                 <field name="name" type="col"/>  
+                <field name="date" type="col" interval="day"/>                                                  
                 <field name="quantity" type="measure" />
                 <field name="value" type="measure" />                              
                 <field name="product_id" type="row" />
