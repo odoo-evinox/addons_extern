@@ -10,9 +10,10 @@ from dateutil.relativedelta import relativedelta
 
 _interval = {
     '15': lambda count: relativedelta(days=count*15),
-    '30': lambda count: relativedelta(months=count)
+    '30': lambda count: relativedelta(days=count*30)
 }
 
+NUMBER_INTERVALS = 5
 
 class SVLAgeReportLocation(models.TransientModel):
     _name = 'l10n.ro.svl.age.report.location'
@@ -111,21 +112,33 @@ class SVLAgeReport(models.TransientModel):
         def _to_str(date):
             return fields.Date.to_string(date)
 
-        date_ref = fields.Date.from_string(self.date_ref)
+        date_ref = date_ref_next = fields.Date.from_string(self.date_ref)
         age_list = []
-        for i in range(5):
+        days = 0
+        for i in range(NUMBER_INTERVALS):
             date = date_ref - _interval[self.interval_days](i)
-            age_list.append({'date': date, 'quantity': 0, 'value': 0}) 
+            age_list.append({
+                'date': date, 
+                'quantity': 0, 
+                'value': 0, 
+            }) 
+
+            days_next = (date_ref - (date_ref - _interval[self.interval_days](i + 1))).days
+            name = f'{days} - {days_next}'            
+            if i == NUMBER_INTERVALS - 1:
+                name += '+' 
+            age_list[i]['name'] = f'[{i+1}] {name} ' + _('days')
+            days = days_next
 
         product = product.with_context(to_date=date)        
         if product.quantity_svl > 0.01:
             quantity_svl = round(product.quantity_svl, 2)            
             value_svl = round(product.value_svl, 2)
-            age_list[4]['quantity'] = max(0, quantity_svl)
-            age_list[4]['value'] = max(0, value_svl)
+            age_list[NUMBER_INTERVALS - 1]['quantity'] = max(0, quantity_svl)
+            age_list[NUMBER_INTERVALS - 1]['value'] = max(0, value_svl)
 
         svl_date_from = _to_str(age_list[0]['date'])
-        svl_date_to = _to_str(age_list[4]['date'])
+        svl_date_to = _to_str(age_list[NUMBER_INTERVALS - 1]['date'])
         domain = ['&',  
                     '&',
                         ('product_id', '=', product.id), 
@@ -148,7 +161,7 @@ class SVLAgeReport(models.TransientModel):
             account_id = svls[0].l10n_ro_account_id
 
             # for interval_nb in [3, 2, 1, 0]
-            for interval_nb in reversed(range(4)):
+            for interval_nb in reversed(range(NUMBER_INTERVALS - 1)):
                 remaining_qty = remaining_qty_inital = sum([item['quantity'] for item in age_list[interval_nb:]])
                 remaining_val = remaining_value_inital = sum([item['value'] for item in age_list[interval_nb:]])
 
@@ -242,6 +255,7 @@ class SVLAgeReport(models.TransientModel):
         for period in age_list:
             vals = {
                 'report_id': self.id,
+                'name': period['name'],
                 'date': _to_str(period['date']),
                 'product_id': product.id,
                 'account_id': account_id and account_id.id,
@@ -267,8 +281,10 @@ class SVLAgeReport(models.TransientModel):
 
 class SVLAgeReportLine(models.TransientModel):
     _name = 'l10n.ro.svl.age.report.line'
+    _order = 'date desc'
 
     report_id = fields.Many2one("l10n.ro.svl.age.report", readonly=True)
+    name = fields.Char(string='Days Range', readonly=True)
     date = fields.Date(readonly=True)
     product_id = fields.Many2one("product.product", readonly=True)
     internal_reference = fields.Char(
