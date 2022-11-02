@@ -98,7 +98,12 @@ class StockValuationLayerRecompute(models.TransientModel):
         #   DELETE from stock_valuation_layer where description 
         #    like '%0 Qty Correction valuation%';
         #""")
-        pass
+        #self._cr.execute("""
+        #   update stock_move sm set company_id = 2 
+        #   from stock_valuation_layer svl 
+        #   where svl.stock_move_id = sm.id and 
+        #   svl.location_id = 24 and svl.location_dest_id = 5
+        #""")
 
     def action_start_recompute(self):
         if self.product_id:
@@ -223,6 +228,8 @@ class StockValuationLayerRecompute(models.TransientModel):
                 svl_plus.value = round(svl_plus.quantity * avg[0], 2)
 
             svls = svls[1:]
+
+        product.sudo().with_company(self.env.company).with_context(disable_auto_svl=True).standard_price = avg[0]
 
     def _run_fifo(self, product, loc):
         #TODO
