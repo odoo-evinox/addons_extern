@@ -145,7 +145,7 @@ class StockValuationLayerRecompute(models.TransientModel):
         while svls:
             svl = svls[0]
 
-            if 'return' in svl.valued_type:
+            if svl.valued_type and 'return' in svl.valued_type:
                 orig_mv = svl.stock_move_id.move_orig_ids
                 if orig_mv:
                     svl_orig = orig_mv.stock_valuation_layer_ids
@@ -155,13 +155,21 @@ class StockValuationLayerRecompute(models.TransientModel):
                     svl.unit_cost = round(abs(val / qty), 2)
 
             if (
-                    svl.stock_move_id._is_in() or
+                    svl.stock_move_id and 
                     (
-                        svl.stock_move_id._is_internal_transfer()
-                        and 
+                        svl.stock_move_id._is_in() or
                         (
-                            svl.stock_move_id.location_id.company_id != 
-                            svl.stock_move_id.location_dest_id.company_id
+                            svl.stock_move_id._is_internal_transfer()
+                            and 
+                            (
+                                svl.stock_move_id.location_id.company_id != 
+                                svl.stock_move_id.location_dest_id.company_id
+                            ) 
+                            and 
+                            (
+                                svl.company_id == svl.location_dest_id.company_id
+                            )
+                            and svl.quantity > 0
                         )
                     )
                 ):
