@@ -89,21 +89,58 @@ class StockValuationLayerRecompute(models.TransientModel):
         # self._cr.execute("""        
         #    UPDATE stock_valuation_layer set valued_type = 'consumption' 
         #    where valued_type = 'production_return';
-        #""")
+        # """)
         # self._cr.execute("""        
         #    DELETE from stock_valuation_layer where description 
         #    like '%negative inventory%';
-        #""")
-        #self._cr.execute("""
+        # """)
+        # self._cr.execute("""
         #   DELETE from stock_valuation_layer where description 
         #    like '%0 Qty Correction valuation%';
-        #""")
-        #self._cr.execute("""
+        # """)
+        # self._cr.execute("""
         #   update stock_move sm set company_id = 2 
         #   from stock_valuation_layer svl 
         #   where svl.stock_move_id = sm.id and 
         #   svl.location_id = 24 and svl.location_dest_id = 5
-        #""")
+        # """)
+        # self._cr.execute("""
+        #    update  stock_move set company_id=2 where location_dest_id = 24
+        # """)
+        
+        ##########################################################
+        # moves = self.env['stock.move'].sudo().search([
+        #     ('location_id', '=', 8),
+        #     ('location_dest_id', '=', 24),
+        #     ('state', '=', 'done'),
+        #     ('create_date', '<', '2022-11-01')
+        # ])
+
+        # for mv in moves:
+        #     mv = mv.sudo()
+        #     mv_copy = mv.copy({
+        #         'location_id': 36,
+        #         'picking_id': None,
+        #         'company_id': 2,
+        #         'move_dest_ids': [(6, 0, [])],
+        #         'name': mv.reference
+        #     })
+        #     self._cr.execute("update stock_move set state= 'done' where id = %s" % mv_copy.id)
+
+        #     self._cr.execute("update stock_move set location_dest_id= 36 where id = %s" % mv.id)
+        #     self._cr.execute("update stock_move_line set location_id= 36 where move_id = %s" % mv.id)
+
+            
+        #     svl_plus = mv.stock_valuation_layer_ids.filtered(lambda s: s.quantity > 0)
+        #     if svl_plus:
+        #         svl_plus.stock_move_id = mv_copy
+        #         svl_plus.location_id = 36
+
+        #     svl_minus = mv.stock_valuation_layer_ids.filtered(lambda s: s.quantity < 0)
+        #     svl_minus.location_dest_id = 36
+
+        # self._cr.commit()
+
 
     def action_start_recompute(self):
         if self.product_id:
@@ -129,7 +166,7 @@ class StockValuationLayerRecompute(models.TransientModel):
         product = product.with_context(to_date=self.date_from)        
         if product.quantity_svl > 0.01:
             quantity_svl = round(product.quantity_svl, 2)            
-            value_svl = round(product.value_svl, 2)
+            value_svl = max(0, round(product.value_svl, 2))
             avg = [round(value_svl / quantity_svl, 2), quantity_svl] 
 
         domain = ['&', 
@@ -417,3 +454,5 @@ class StockValuationLayerRecompute(models.TransientModel):
             new = svl.remaining_qty
             svl.remaining_qty = svl.new_remaining_qty
             svl.new_remaining_qty = new              
+
+

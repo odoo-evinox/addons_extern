@@ -127,6 +127,11 @@ class StorageSheet(models.TransientModel):
             SELECT  %(report)s as report_id, sm.product_id as product_id,
                     COALESCE(sum(svl_in.new_value),0)   as amount_in,
                     COALESCE(sum(svl_in.quantity), 0)   as quantity_in,
+                    CASE 
+                        WHEN COALESCE(sum(svl_in.quantity), 0) != 0 
+                            THEN COALESCE(sum(svl_in.new_value),0) / sum(svl_in.quantity)
+                        ELSE 0
+                    END as unit_price_in,                    
                      svl_in.account_id,
                      svl_in.invoice_id,
                     sm.date as date_time,
@@ -162,6 +167,11 @@ class StorageSheet(models.TransientModel):
             SELECT  %(report)s as report_id, sm.product_id as product_id,
                     -1*COALESCE(sum(svl_out.new_value),0)   as amount_out,
                     -1*COALESCE(sum(svl_out.quantity),0)   as quantity_out,
+                    CASE 
+                        WHEN COALESCE(sum(svl_out.quantity), 0) != 0 
+                            THEN COALESCE(sum(svl_out.new_value),0) / sum(svl_out.quantity)
+                        ELSE 0
+                    END as unit_price_out,                      
                     svl_out.account_id,
                     svl_out.invoice_id,
                     sm.date as date_time,
