@@ -79,67 +79,119 @@ class StockValuationLayerRecompute(models.TransientModel):
             svl.new_remaining_value = svl.remaining_value        
             svl.new_remaining_qty = svl.remaining_qty        
 
-        # self._cr.execute("""
-        #     DELETE from stock_valuation_layer where valued_type is null
-        # """)
-        # self._cr.execute("""
-        #     UPDATE stock_quant sq set company_id = loc.company_id 
-        #     FROM stock_location loc where sq.location_id = loc.id;
-        # """)
-        # self._cr.execute("""        
-        #    UPDATE stock_valuation_layer set valued_type = 'consumption' 
-        #    where valued_type = 'production_return';
-        # """)
-        # self._cr.execute("""        
-        #    DELETE from stock_valuation_layer where description 
-        #    like '%negative inventory%';
-        # """)
-        # self._cr.execute("""
-        #   DELETE from stock_valuation_layer where description 
-        #    like '%0 Qty Correction valuation%';
-        # """)
-        # self._cr.execute("""
-        #   update stock_move sm set company_id = 2 
-        #   from stock_valuation_layer svl 
-        #   where svl.stock_move_id = sm.id and 
-        #   svl.location_id = 24 and svl.location_dest_id = 5
-        # """)
-        # self._cr.execute("""
-        #    update  stock_move set company_id=2 where location_dest_id = 24
-        # """)
-        
-        ##########################################################
-        # moves = self.env['stock.move'].sudo().search([
-        #     ('location_id', '=', 8),
-        #     ('location_dest_id', '=', 24),
-        #     ('state', '=', 'done'),
-        #     ('create_date', '<', '2022-11-01')
-        # ])
+# self._cr.execute("""
+#     DELETE from stock_valuation_layer where valued_type is null
+# """)
+# self._cr.execute("""
+#     UPDATE stock_quant sq set company_id = loc.company_id 
+#     FROM stock_location loc where sq.location_id = loc.id;
+# """)
+# self._cr.execute("""        
+#    UPDATE stock_valuation_layer set valued_type = 'consumption' 
+#    where valued_type = 'production_return';
+# """)
+# self._cr.execute("""        
+#    DELETE from stock_valuation_layer where description 
+#    like '%negative inventory%';
+# """)
+# self._cr.execute("""
+#   DELETE from stock_valuation_layer where description 
+#    like '%0 Qty Correction valuation%';
+# """)
+# self._cr.execute("""
+#   update stock_move sm set company_id = 2 
+#   from stock_valuation_layer svl 
+#   where svl.stock_move_id = sm.id and 
+#   svl.location_id = 24 and svl.location_dest_id = 5
+# """)
+# self._cr.execute("""
+#    update stock_valuation_layer set create_date = '2021-12-22' where id = 109335;
+# """)
 
-        # for mv in moves:
-        #     mv = mv.sudo()
-        #     mv_copy = mv.copy({
-        #         'location_id': 36,
-        #         'picking_id': None,
-        #         'company_id': 2,
-        #         'move_dest_ids': [(6, 0, [])],
-        #         'name': mv.reference
-        #     })
-        #     self._cr.execute("update stock_move set state= 'done' where id = %s" % mv_copy.id)
+# #########################################################
+# moves = self.env['stock.move'].sudo().search([
+#     ('location_id', '=', 8),
+#     ('location_dest_id', '=', 24),
+#     ('state', '=', 'done'),
+#     ('create_date', '<', '2022-11-01')
+# ])
 
-        #     self._cr.execute("update stock_move set location_dest_id= 36 where id = %s" % mv.id)
-        #     self._cr.execute("update stock_move_line set location_id= 36 where move_id = %s" % mv.id)
+# for mv in moves:
+#     mv = mv.sudo()
+#     mv_copy = mv.copy({
+#         'location_id': 36,
+#         'picking_id': None,
+#         'company_id': 2,
+#         'move_dest_ids': [(6, 0, [])],
+#         'name': mv.reference
+#     })
+#     mv.move_dest_ids = [(6, 0, [mv_copy.id])]
 
-            
-        #     svl_plus = mv.stock_valuation_layer_ids.filtered(lambda s: s.quantity > 0)
-        #     if svl_plus:
-        #         svl_plus.stock_move_id = mv_copy
-        #         svl_plus.location_id = 36
+#     self._cr.execute("update stock_move set state= 'done' where id = %s" % mv_copy.id)
 
-        #     svl_minus = mv.stock_valuation_layer_ids.filtered(lambda s: s.quantity < 0)
-        #     svl_minus.location_dest_id = 36
+#     self._cr.execute("update stock_move set location_dest_id= 36 where id = %s" % mv.id)
+#     self._cr.execute("update stock_move_line set location_id= 36 where move_id = %s" % mv.id)
 
-        # self._cr.commit()
+   
+#     svl_plus = mv.stock_valuation_layer_ids.filtered(lambda s: s.quantity > 0)
+#     if svl_plus:
+#         svl_plus.stock_move_id = mv_copy
+#         svl_plus.location_id = 36
+
+#     svl_minus = mv.stock_valuation_layer_ids.filtered(lambda s: s.quantity < 0)
+#     svl_minus.location_dest_id = 36
+
+# self._cr.commit()
+
+# self._cr.execute("""
+#       update  stock_move set company_id=2 where location_dest_id = 24
+# """)
+
+# from odoo.tools import float_is_zero
+# from odoo import fields
+# self = self.with_company(1)
+# products = self.env['product.product'].search([])
+# locs = self.env['stock.location'].search([('usage', '=', 'internal')], order="id")
+# date_from = fields.Datetime.from_string('2021-12-31')
+# for product in products:
+#     product = product.with_context(to_date=date_from)    
+#     quantity_svl = product.quantity_svl
+#     value_svl = product.value_svl
+#     if float_is_zero(quantity_svl, precision_rounding=product.uom_id.rounding):
+#         if not float_is_zero(value_svl, 0.0, precision_rounding=product.uom_id.rounding):
+#             domain = ['&', 
+#                         '&',                            
+#                             '&',
+#                                 ('product_id', '=', product.id), 
+#                                 ('create_date', '<', '2022-01-01'),
+#                             ('company_id', '=', 1),
+#                         '|',
+#                             '&',
+#                                 ('location_dest_id', 'in', locs.ids), 
+#                                 ('quantity', '>', 0.001),
+#                             '&',
+#                                 ('location_id', "in", locs.ids),
+#                                 ('quantity', '<', 0.001),
+#                     ]
+
+#             last_svl = self.env['stock.valuation.layer'].search(
+#                 domain, limit=1, order='create_date desc')
+
+#             if last_svl:
+#                 svl = self.env['stock.valuation.layer'].create({
+#                     'company_id': 1,
+#                     'product_id': product.id,
+#                     'create_date': last_svl.create_date,
+#                     'stock_move_id': last_svl.stock_move_id.id,
+#                     'quantity': 0,
+#                     'value': -value_svl,
+#                     'description': "fix initial value for 2022-01-01",
+#                     'location_id': last_svl.location_id.id,
+#                     'location_dest_id': last_svl.location_dest_id.id,
+#                     'account_id': last_svl.account_id.id
+#                 })
+#                 self._cr.execute("update stock_valuation_layer set create_date = '%s' where id = %s" % (last_svl.create_date, svl.id))
+# self._cr.commit()
 
 
     def action_start_recompute(self):
@@ -161,6 +213,28 @@ class StockValuationLayerRecompute(models.TransientModel):
 
     def _run_average(self, product, locations):
         self = self.sudo()
+
+        def shift_svl0_later(svls):
+            should_break = False
+            svl_qty = abs(svl.quantity)                
+            #move svl later, after a reception
+            
+            idx = -1
+            for i in range(len(svls)):
+                if svls[i].quantity > 0:
+                    if svls[i].quantity >= svl_qty:
+                        idx = i
+                        break
+                    else:
+                        svl_qty -= svls[i].quantity
+            if idx != -1:
+                svls.insert(idx + 1, svl)
+            else:
+                print(f"NEGATIVE SVL: {svl.id} {svl.description}")
+                print(svls)
+                should_break = True
+            return should_break
+
         date_from = fields.Datetime.to_datetime(self.date_from)
         avg = [0, 0]
         product = product.with_context(to_date=self.date_from)        
@@ -186,7 +260,6 @@ class StockValuationLayerRecompute(models.TransientModel):
 
         while svls:
             svl = svls[0]
-
             if svl.valued_type and 'return' in svl.valued_type:
                 orig_mv = svl.stock_move_id.move_orig_ids
                 if orig_mv:
@@ -219,31 +292,20 @@ class StockValuationLayerRecompute(models.TransientModel):
                 old_value = avg[0] * avg[1]
                 #include landed costs and price diffs
                 svl_val = sum([s.value for s in (svl + svl.stock_valuation_layer_ids)])
+
                 if (avg[1] + svl.quantity) > 0:
                     new_avg = (old_value + svl_val) / (avg[1] + svl.quantity)
                 else:
                     new_avg = 0
+
                 avg = [new_avg, avg[1] + svl.quantity]
 
             elif svl.stock_move_id._is_out():
-                if avg[1] <= 0:
+                svl_qty = abs(svl.quantity)                
+                if avg[1] <= 0 or avg[1] < svl_qty:
                     #move svl later, after a reception
-                    
-                    avg[1] = 0
-                    idx = -1
-                    svl_qty = abs(svl.quantity)
-                    for i in range(len(svls)):
-                        if svls[i].quantity > 0:
-                            if svls[i].quantity >= svl_qty:
-                                idx = i
-                                break
-                            else:
-                                svl_qty -= svls[i].quantity
-                    if idx != -1:
-                        svls.insert(idx + 1, svl)
-                    else:
-                        print(f"NEGATIVE SVL: {svl.id} {svl.description}")
-                        print(svls)
+                    should_break = shift_svl0_later(svls)
+                    if should_break:
                         break
                 else:
                     if 'return' not in svl.valued_type:
@@ -259,10 +321,29 @@ class StockValuationLayerRecompute(models.TransientModel):
             elif svl.stock_move_id._is_internal_transfer() and svl.quantity < 0:
                 svl.unit_cost = round(avg[0], 2)
                 svl.value = round(avg[0] * svl.quantity, 2)
-                
+
                 svl_plus = svl.stock_move_id.stock_valuation_layer_ids.filtered(lambda s: s.quantity > 0)
-                svl_plus.unit_cost = round(avg[0], 2)
-                svl_plus.value = round(svl_plus.quantity * avg[0], 2)
+                if svl.company_id != svl.location_dest_id.company_id:
+                    mv_dest = svl.stock_move_id.with_company(svl.location_dest_id.company_id).move_dest_ids
+                    svl_plus = mv_dest.sudo().stock_valuation_layer_ids.filtered(lambda s: s.quantity > 0)
+
+                svl_plus.sudo().unit_cost = round(avg[0], 2)
+                svl_plus.sudo().value = round(svl_plus.quantity * avg[0], 2)
+
+
+                if svl.company_id != svl.location_dest_id.company_id:
+                    svl_qty = abs(svl.quantity)                
+                    if avg[1] <= 0 or avg[1] < svl_qty:
+                        should_break = shift_svl0_later(svls)
+                        if should_break:
+                            break
+                    else:
+                        if (avg[1] - abs(svl.quantity)) > 0:
+                            avg[0] = (avg[0] * avg[1] - abs(svl.value)) / (avg[1] - abs(svl.quantity))
+                        else:
+                            avg[0] = 0
+                        avg[1] = max(0, avg[1] - abs(svl.quantity))
+
 
             svls = svls[1:]
 
