@@ -13,7 +13,7 @@ _logger = logging.getLogger(__name__)
 
 
 class StorageSheet(models.TransientModel):
-    _inherit = "stock.storage.sheet"
+    _inherit = "l10n.ro.stock.storage.sheet"
     
     use_svl_new_values = fields.Boolean(
         default=False
@@ -28,7 +28,7 @@ class StorageSheet(models.TransientModel):
 
         self.env["account.move.line"].check_access_rights("read")
 
-        lines = self.env["stock.storage.sheet.line"].search(
+        lines = self.env["l10n.ro.stock.storage.sheet.line"].search(
             [("report_id", "=", self.id)]
         )
         lines.unlink()
