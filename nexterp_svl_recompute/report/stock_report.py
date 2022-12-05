@@ -13,7 +13,7 @@ _logger = logging.getLogger(__name__)
 
 
 class StorageSheet(models.TransientModel):
-    _inherit = "l10n.ro.stock.storage.sheet"
+    _inherit = "stock.storage.sheet"
     
     use_svl_new_values = fields.Boolean(
         default=False
