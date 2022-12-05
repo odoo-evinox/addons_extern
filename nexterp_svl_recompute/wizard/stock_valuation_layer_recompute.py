@@ -285,7 +285,7 @@ class StockValuationLayerRecompute(models.TransientModel):
 
         while svls:
             svl = svls[0]
-            if svl.l10n_ro_valued_type and 'return' in svl.l10n_ro_valued_type:
+            if svl.valued_type and 'return' in svl.valued_type:
                 orig_mv = svl.stock_move_id.move_orig_ids
                 if orig_mv:
                     svl_orig = orig_mv.stock_valuation_layer_ids
@@ -333,7 +333,7 @@ class StockValuationLayerRecompute(models.TransientModel):
                     if should_break:
                         break
                 else:
-                    if 'return' not in svl.l10n_ro_valued_type:
+                    if 'return' not in svl.valued_type:
                         svl.unit_cost = round(avg[0], 2)
                         svl.value = round(avg[0] * svl.quantity, 2)
                     else:
@@ -410,7 +410,7 @@ class StockValuationLayerRecompute(models.TransientModel):
             if fifo_lst:
                 last_price = fifo_lst[0][1]
                 for svl_out in svl_loc_out:
-                    if svl_out.l10n_ro_valued_type == 'reception_return':
+                    if svl_out.valued_type == 'reception_return':
                         for i in range(len(fifo_lst)):
                             fifo_entry = fifo_lst[i]
                             if fifo_entry[3] in svl_out.stock_move_id.move_orig_ids:
@@ -469,7 +469,7 @@ class StockValuationLayerRecompute(models.TransientModel):
                                         fifo_entry[4].value = svl_out_uc * fifo_entry[4].quantity
                                     break
                         # Fix internal transfer price
-                        if svl_out.l10n_ro_valued_type == "internal_transfer":
+                        if svl_out.valued_type == "internal_transfer":
                             other_svl = svl_out.stock_move_id.stock_valuation_layer_ids.filtered(
                                 lambda svl: svl.id != svl_out.id and svl.quantity > 0
                             )
