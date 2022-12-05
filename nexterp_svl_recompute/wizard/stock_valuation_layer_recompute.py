@@ -91,8 +91,6 @@ class StockValuationLayerRecompute(models.TransientModel):
             svl.new_remaining_value = svl.remaining_value        
             svl.new_remaining_qty = svl.remaining_qty        
 
-<<<<<<< Updated upstream
-=======
 # self._cr.execute("""
 #     DELETE from stock_valuation_layer where valued_type is null
 # """)
@@ -219,7 +217,6 @@ class StockValuationLayerRecompute(models.TransientModel):
 # self._cr.commit()
 
 
->>>>>>> Stashed changes
     def action_start_recompute(self):
         if self.product_id:
             products = self.product_id
