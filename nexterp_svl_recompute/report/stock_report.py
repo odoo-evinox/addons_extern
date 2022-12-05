@@ -28,7 +28,7 @@ class StorageSheet(models.TransientModel):
 
         self.env["account.move.line"].check_access_rights("read")
 
-        lines = self.env["l10n.ro.stock.storage.sheet.line"].search(
+        lines = self.env["stock.storage.sheet.line"].search(
             [("report_id", "=", self.id)]
         )
         lines.unlink()
