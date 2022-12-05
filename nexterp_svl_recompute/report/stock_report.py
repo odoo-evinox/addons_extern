@@ -132,8 +132,8 @@ class StorageSheet(models.TransientModel):
                     COALESCE(sum(svl_in.new_value),0)   as amount_in,
                     COALESCE(sum(svl_in.quantity), 0)   as quantity_in,
                     CASE
-                        WHEN COALESCE(sum(svl_in.quantity), 0) != 0
-                            THEN COALESCE(sum(svl_in.new_value),0) / sum(svl_in.quantity)
+                        WHEN abs(COALESCE(sum(svl_in.quantity), 0)) > 0.001
+                            THEN round(COALESCE(sum(svl_in.new_value),0) / sum(svl_in.quantity), 2)
                         ELSE 0
                     END as unit_price_in,
                      svl_in.account_id as account_id,
@@ -176,8 +176,8 @@ class StorageSheet(models.TransientModel):
                     -1*COALESCE(sum(svl_out.new_value),0)   as amount_out,
                     -1*COALESCE(sum(svl_out.quantity),0)   as quantity_out,
                     CASE
-                        WHEN COALESCE(sum(svl_out.quantity), 0) != 0
-                            THEN COALESCE(sum(svl_out.new_value),0) / sum(svl_out.quantity)
+                        WHEN abs(COALESCE(sum(svl_out.quantity), 0)) > 0.001
+                            THEN round(COALESCE(sum(svl_out.new_value),0) / sum(svl_out.quantity), 2)
                         ELSE 0
                     END as unit_price_out,
                     svl_out.account_id as account_id,
