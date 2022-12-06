@@ -7,7 +7,6 @@ from odoo.tools import float_is_zero
 from collections import defaultdict
 
 
-
 class SVLRecomputeLocation(models.TransientModel):
     _name = 'svl.recompute.location'
     _order = 'sequence, id'
@@ -44,6 +43,11 @@ class StockValuationLayerRecompute(models.TransientModel):
     update_svl_values = fields.Boolean(
         default=False
     )
+
+    @api.onchange('update_account_moves')
+    def onchange_upd_account_moves(self):
+        if self.update_account_moves is True:
+            self.update_svl_values = True
 
     @api.model
     def default_get(self, fields):
@@ -563,20 +567,24 @@ class StockValuationLayerRecompute(models.TransientModel):
                 new = svl.remaining_qty
                 svl.remaining_qty = svl.new_remaining_qty
                 svl.new_remaining_qty = new
-            elif self.update_account_moves:
+            
+            if self.update_account_moves:
                 if svl.quantity < 0:
                     try:
                         svl = svl.sudo()
                         if svl.account_move_id:
                             if svl.value != svl.new_value:
-                                svl.account_move_id._check_fiscalyear_lock_date()
-                                svl.account_move_id.button_draft()
-                                line_debit = svl.account_move_id.line_ids.filtered(lambda l: l.balance > 0)
-                                line_debit.with_context(check_move_validity=False).debit = abs(svl.value)
+                                try:
+                                    svl.account_move_id._check_fiscalyear_lock_date()
+                                    svl.account_move_id.button_draft()
+                                    line_debit = svl.account_move_id.line_ids.filtered(lambda l: l.balance > 0)
+                                    line_debit.with_context(check_move_validity=False).debit = abs(svl.value)
 
-                                line_credit = svl.account_move_id.line_ids.filtered(lambda l: l.balance < 0)
-                                line_credit.with_context(check_move_validity=False).credit = abs(svl.value)
-                                svl.account_move_id.action_post()
+                                    line_credit = svl.account_move_id.line_ids.filtered(lambda l: l.balance < 0)
+                                    line_credit.with_context(check_move_validity=False).credit = abs(svl.value)
+                                    svl.account_move_id.action_post()
+                                except UserError:
+                                    pass
                         else:
                             svl.stock_move_id.with_context(force_period_date=svl.create_date)._account_entry_move(
                                 svl.quantity, svl.description, svl.id, svl.value
