@@ -10,8 +10,9 @@
                     <field name="company_id" readonly="1"/>                    
                     <field name="product_id"/>
                     <field name="date_from"/>
-                    <field name="update_account_moves" />  
-                    <field name="fix_remaining_qty" />  
+                    <field name="update_svl_values" />
+                    <field name="update_account_moves" />
+                    <field name="fix_remaining_qty" />
                                       
                 </group>
                 <notebook>
