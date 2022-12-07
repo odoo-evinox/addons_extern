@@ -94,132 +94,6 @@ class StockValuationLayerRecompute(models.TransientModel):
             svl.new_remaining_value = svl.remaining_value
             svl.new_remaining_qty = svl.remaining_qty
 
-# self._cr.execute("""
-#     DELETE from stock_valuation_layer where valued_type is null
-# """)
-# self._cr.execute("""
-#     UPDATE stock_quant sq set company_id = loc.company_id
-#     FROM stock_location loc where sq.location_id = loc.id;
-# """)
-# self._cr.execute("""
-#    UPDATE stock_valuation_layer set valued_type = 'consumption'
-#    where valued_type = 'production_return';
-# """)
-# self._cr.execute("""
-#    DELETE from stock_valuation_layer where description
-#    like '%negative inventory%';
-# """)
-# self._cr.execute("""
-#   DELETE from stock_valuation_layer where description
-#    like '%0 Qty Correction valuation%';
-# """)
-# self._cr.execute("""
-#   update stock_move sm set company_id = 2
-#   from stock_valuation_layer svl
-#   where svl.stock_move_id = sm.id and
-#   svl.location_id = 24 and svl.location_dest_id = 5
-# """)
-# self._cr.execute("""
-#    update stock_valuation_layer set create_date = '2021-12-22' where id = 109335;
-# """)
-# self._cr.execute("""
-#     update stock_valuation_layer set quantity = 0, value = 0 where id = 77857;
-# """)
-
-# #########################################################
-# moves = self.env['stock.move'].sudo().search([
-#     ('location_id', '=', 8),
-#     ('location_dest_id', '=', 24),
-#     ('state', '=', 'done'),
-#     ('create_date', '<', '2022-11-01')
-# ])
-
-# for mv in moves:
-#     mv = mv.sudo()
-#     mv_copy = mv.copy({
-#         'location_id': 36,
-#         'picking_id': None,
-#         'company_id': 2,
-#         'move_dest_ids': [(6, 0, [])],
-#         'name': mv.reference
-#     })
-#     mv.move_dest_ids = [(6, 0, [mv_copy.id])]
-
-#     self._cr.execute("update stock_move set state= 'done' where id = %s" % mv_copy.id)
-
-#     self._cr.execute("update stock_move set location_dest_id= 36 where id = %s" % mv.id)
-#     self._cr.execute("update stock_move_line set location_id= 36 where move_id = %s" % mv.id)
-
-
-#     svl_plus = mv.stock_valuation_layer_ids.filtered(lambda s: s.quantity > 0)
-#     if svl_plus:
-#         svl_plus.stock_move_id = mv_copy
-#         svl_plus.location_id = 36
-
-#     svl_minus = mv.stock_valuation_layer_ids.filtered(lambda s: s.quantity < 0)
-#     svl_minus.location_dest_id = 36
-
-# self._cr.commit()
-# ################################
-# self._cr.execute("""
-#       update  stock_move set company_id=2 where location_dest_id = 24
-# """)
-# ####################################
-# from odoo.tools import float_is_zero
-# from odoo import fields
-# companies = [1, 2]
-# #companies = [1]
-# for company in companies:
-#     self = self.with_company(company)
-#     products = self.env['product.product'].search([])
-#     #products = self.env['product.product'].browse(23580)
-#     locs = self.env['stock.location'].search([
-#         ('usage', '=', 'internal'),
-#         ('company_id', '=', company)
-#     ], order="id")
-#     date_from = fields.Datetime.from_string('2022-01-01')
-#     for product in products:
-#         product = product.with_company(company)
-#         product = product.with_context(to_date=date_from)
-#         quantity_svl = product.quantity_svl
-#         value_svl = product.value_svl
-#         if float_is_zero(quantity_svl, precision_rounding=0.01):
-#             if not float_is_zero(value_svl, precision_rounding=0.01):
-#                 domain = ['&',
-#                             '&',
-#                                 '&',
-#                                     ('product_id', '=', product.id),
-#                                     ('create_date', '<', '2022-01-01'),
-#                                 ('company_id', '=', company),
-#                             '|',
-#                                 '&',
-#                                     ('location_dest_id', 'in', locs.ids),
-#                                     ('quantity', '>', 0.001),
-#                                 '&',
-#                                     ('location_id', "in", locs.ids),
-#                                     ('quantity', '<', 0.001),
-#                         ]
-
-#                 last_svl = self.env['stock.valuation.layer'].search(
-#                     domain, limit=1, order='create_date desc')
-
-#                 if last_svl:
-#                     svl = self.env['stock.valuation.layer'].create({
-#                         'company_id': company,
-#                         'product_id': product.id,
-#                         'create_date': last_svl.create_date,
-#                         'stock_move_id': last_svl.stock_move_id.id,
-#                         'quantity': 0,
-#                         'value': -value_svl,
-#                         'description': "fix initial value for 2022-01-01",
-#                         'location_id': last_svl.location_id.id,
-#                         'location_dest_id': last_svl.location_dest_id.id,
-#                         'account_id': last_svl.account_id.id
-#                     })
-#                     self._cr.execute("update stock_valuation_layer set create_date = '%s' where id = %s" % (last_svl.create_date, svl.id))
-# self._cr.commit()
-
-
     def action_start_recompute(self):
         if self.product_id:
             products = self.product_id
@@ -286,6 +160,7 @@ class StockValuationLayerRecompute(models.TransientModel):
 
         svls = list(self.env['stock.valuation.layer'].search(domain).sorted(lambda svl: svl.create_date))
 
+        import ipdb; ipdb.set_trace(context=10)
         while svls:
             svl = svls[0]
             if svl.valued_type and 'return' in svl.valued_type:
