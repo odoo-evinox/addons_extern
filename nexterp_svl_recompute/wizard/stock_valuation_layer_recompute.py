@@ -73,11 +73,8 @@ class StockValuationLayerRecompute(models.TransientModel):
             products = self.product_id or self.env['product.product'].search([])
 
         locations = self.location_ids.mapped('location_id')
-        date_from = fields.Datetime.to_datetime(self.date_from)
         domain = ['&',
-                    '&',
-                        ('product_id', 'in', products.ids),
-                        ('create_date', '>=', date_from),
+                    ('product_id', 'in', products.ids),
                     '|',
                         '&',
                             ('location_dest_id', 'in', locations.ids),
