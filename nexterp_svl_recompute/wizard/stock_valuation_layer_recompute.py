@@ -80,12 +80,8 @@ class StockValuationLayerRecompute(models.TransientModel):
         domain = ['&',
                     ('product_id', 'in', products.ids),
                     '|',
-                        '&',
-                            ('location_dest_id', 'in', locations.ids),
-                            ('quantity', '>', 0.001),
-                        '&',
-                            ('location_id', "in", locations.ids),
-                            ('quantity', '<', 0.001),
+                        ('location_dest_id', 'in', locations.ids),
+                        ('location_id', "in", locations.ids),
                 ]
 
         svls = self.env['stock.valuation.layer'].search(domain)
