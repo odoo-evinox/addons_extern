@@ -157,7 +157,6 @@ class StockValuationLayerRecompute(models.TransientModel):
 
         svls = list(self.env['stock.valuation.layer'].search(domain).sorted(lambda svl: svl.create_date))
 
-        import ipdb; ipdb.set_trace(context=10)
         while svls:
             svl = svls[0]
             if svl.valued_type and 'return' in svl.valued_type:
@@ -335,7 +334,6 @@ class StockValuationLayerRecompute(models.TransientModel):
                             for i in range(len(fifo_lst)):
                                 fifo_entry = fifo_lst[i]
                                 if fifo_entry[3] in svl_out.stock_move_id.move_dest_ids:
-                                    # import ipdb; ipdb.set_trace(context=10)
                                     # fix new unit_price in fifo
                                     svl_out_uc = abs(svl_out.value / svl_out.quantity)
                                     if svl_out_uc != fifo_entry[1]:
