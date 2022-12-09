@@ -161,6 +161,7 @@ class StockValuationLayerRecompute(models.TransientModel):
                      'stock_move_id': last_svl_before_date.stock_move_id.id,
                      'quantity': 0,
                      'value': -value_svl,
+                     'new_value': -value_svl,
                      'description': "fix 0 qty value for BEFORE RECOMPUTE DATE",
                      'location_id': last_svl_before_date.location_id.id,
                      'location_dest_id': last_svl_before_date.location_dest_id.id,
