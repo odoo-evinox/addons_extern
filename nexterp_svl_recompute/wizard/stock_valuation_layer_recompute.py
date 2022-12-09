@@ -133,10 +133,44 @@ class StockValuationLayerRecompute(models.TransientModel):
         date_from = fields.Datetime.to_datetime(self.date_from)
         avg = [0, 0]
         product = product.with_context(to_date=self.date_from)
+        last_svl_before_date = None
+ 
         if product.quantity_svl > 0.01:
             quantity_svl = round(product.quantity_svl, 2)
             value_svl = max(0, round(product.value_svl, 2))
             avg = [round(value_svl / quantity_svl, 2), quantity_svl]
+        else:
+            dom = ['&',
+                '&',
+                    ('product_id', '=', product.id),
+                    ('create_date', '<', date_from),
+                '|',
+                        ('location_dest_id', 'in', locations),
+                        ('location_id', "in", locations),
+                ]
+
+            value_svl = product.value_svl
+            last_svl_before_date = self.env['stock.valuation.layer'].search(
+                    dom, limit=1, order='create_date desc')            
+            if round(value_svl, 3):
+                if last_svl_before_date:
+                    svl = self.env['stock.valuation.layer'].create({
+                     'company_id': self.company_id.id,
+                     'product_id': product.id,
+                     'create_date': last_svl_before_date.create_date,
+                     'stock_move_id': last_svl_before_date.stock_move_id.id,
+                     'quantity': 0,
+                     'value': -value_svl,
+                     'description': "fix 0 qty value for BEFORE RECOMPUTE DATE",
+                     'location_id': last_svl_before_date.location_id.id,
+                     'location_dest_id': last_svl_before_date.location_dest_id.id,
+                     'account_id': last_svl_before_date.account_id.id
+                    })
+                    self._cr.execute("update stock_valuation_layer set create_date = '%s' where id = %s" % (
+                        last_svl_before_date.create_date, svl.id))
+                    #svl.stock_move_id.with_context(force_period_date=svl.create_date)._account_entry_move(
+                    #    svl.quantity, svl.description, svl.id, svl.value)    
+
 
         domain = ['&',
                     '&',
@@ -152,7 +186,7 @@ class StockValuationLayerRecompute(models.TransientModel):
                 ]
 
         svls = list(self.env['stock.valuation.layer'].search(domain).sorted(lambda svl: svl.create_date))
-
+        last_avg = avg[0]
         while svls:
             svl = svls[0]
             if svl.valued_type and 'return' in svl.valued_type:
@@ -241,8 +275,11 @@ class StockValuationLayerRecompute(models.TransientModel):
 
 
             svls = svls[1:]
+            last_avg = round(avg[0], 3) or last_avg
 
-        product.sudo().with_company(self.env.company).with_context(disable_auto_svl=True).standard_price = avg[0]
+        if not round(last_avg, 3) and last_svl_before_date:
+            last_avg = last_svl_before_date.unit_cost
+        product.sudo().with_company(self.env.company).with_context(disable_auto_svl=True).standard_price = last_avg
 
     def _run_fifo(self, product, loc):
         date_from = fields.Datetime.to_datetime(self.date_from)
