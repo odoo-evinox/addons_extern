@@ -149,9 +149,9 @@ class StorageSheet(models.TransientModel):
                             on svl_in.stock_move_id = sm.id and
                         ((sm.location_dest_id = %(location)s and
                         svl_in.quantity>=0 and
-                        valued_type != 'delivery_return') or
+                        valued_type not like '%%_return') or
                         (sm.location_id = %(location)s and
-                        (svl_in.quantity<=0 and valued_type like 'reception_return')))
+                        (svl_in.quantity<=0 and valued_type like '%%_return')))
                     left join stock_picking as sp on sm.picking_id = sp.id
                     left join account_move am on svl_in.invoice_id = am.id
                 where
@@ -194,9 +194,9 @@ class StorageSheet(models.TransientModel):
                             on svl_out.stock_move_id = sm.id and
                         ((sm.location_id = %(location)s and
                         svl_out.quantity<=0 and
-                        valued_type != 'reception_return') or
+                        valued_type not like '%%_return') or
                         (sm.location_dest_id =  %(location)s and
-                        (svl_out.quantity>=0 and valued_type like 'delivery_return')))
+                        (svl_out.quantity>=0 and valued_type like '%%_return')))
                     left join stock_picking as sp on sm.picking_id = sp.id
                     left join account_move am on svl_out.invoice_id = am.id
                 where

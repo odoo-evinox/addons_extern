@@ -62,8 +62,8 @@ class StockValuationLayerRecompute(models.TransientModel):
     def buttton_do_correction(self):
         self._prepare_svls()
         self.action_start_recompute()
-        self._fix_remaining_qty_value()
         self._finalize_svls()
+        self._fix_remaining_qty_value()        
 
     def _prepare_svls(self):
         #backup unit_cost and value
@@ -101,8 +101,6 @@ class StockValuationLayerRecompute(models.TransientModel):
 
             if product.cost_method == "average":
                 self._run_average(product, locations.ids)
-
-        self._fix_remaining_qty_value()
 
         return True
 
@@ -152,7 +150,7 @@ class StockValuationLayerRecompute(models.TransientModel):
             value_svl = product.value_svl
             last_svl_before_date = self.env['stock.valuation.layer'].search(
                     dom, limit=1, order='create_date desc')            
-            if round(value_svl, 3):
+            if round(value_svl, 6):
                 if last_svl_before_date:
                     svl = self.env['stock.valuation.layer'].create({
                      'company_id': self.company_id.id,
@@ -214,21 +212,21 @@ class StockValuationLayerRecompute(models.TransientModel):
                             (
                                 svl.company_id == svl.location_dest_id.company_id
                             )
-                            and svl.quantity > 0
                         )
                     )
                 ):
                 #update average cost
-                old_value = avg[0] * avg[1]
-                #include landed costs and price diffs
-                svl_val = sum([s.value for s in (svl + svl.stock_valuation_layer_ids)])
+                if  svl.quantity > 0:
+                    old_value = avg[0] * avg[1]
+                    #include landed costs and price diffs
+                    svl_val = sum([s.value for s in (svl + svl.stock_valuation_layer_ids)])
 
-                if (avg[1] + svl.quantity) > 0:
-                    new_avg = (old_value + svl_val) / (avg[1] + svl.quantity)
-                else:
-                    new_avg = 0
+                    if (avg[1] + svl.quantity) > 0:
+                        new_avg = (old_value + svl_val) / (avg[1] + svl.quantity)
+                    else:
+                        new_avg = 0
 
-                avg = [new_avg, avg[1] + svl.quantity]
+                    avg = [new_avg, avg[1] + svl.quantity]
 
             elif svl.stock_move_id._is_out():
                 svl_qty = abs(svl.quantity)
@@ -252,15 +250,15 @@ class StockValuationLayerRecompute(models.TransientModel):
                 svl.unit_cost = round(avg[0], 2)
                 svl.value = round(avg[0] * svl.quantity, 2)
 
-                svl_plus = svl.stock_move_id.stock_valuation_layer_ids.filtered(lambda s: s.quantity > 0)
+                svl_plus = svl.stock_move_id.sudo().stock_valuation_layer_ids.filtered(lambda s: s.quantity > 0)
                 if svl.company_id != svl.location_dest_id.company_id:
                     mv_dest = svl.stock_move_id.with_company(svl.location_dest_id.company_id).move_dest_ids
-                    svl_plus = mv_dest.sudo().stock_valuation_layer_ids.filtered(lambda s: s.quantity > 0)
+                    svl_plus |= mv_dest.sudo().stock_valuation_layer_ids#.filtered(lambda s: s.quantity > 0)
 
-                svl_plus.sudo().unit_cost = round(avg[0], 2)
-                svl_plus.sudo().value = round(svl_plus.quantity * avg[0], 2)
-
-
+                for svlp in svl_plus:
+                    svlp.sudo().unit_cost = round(avg[0], 2)
+                    svlp.sudo().value = round(svlp.quantity * avg[0], 2)
+                
                 if svl.company_id != svl.location_dest_id.company_id:
                     svl_qty = abs(svl.quantity)
                     if avg[1] <= 0 or avg[1] < svl_qty:

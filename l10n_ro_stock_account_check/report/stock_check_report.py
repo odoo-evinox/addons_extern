@@ -46,14 +46,14 @@ class StockAccountingCheck(models.TransientModel):
                 a.product_id as product_id,
                 a.location_id as location_id,
                 a.location_dest_id as location_dest_id,
-                a.l10n_ro_account_id as account_id,
+                a.account_id as account_id,
                 svl_qty as qty_svl,
                 a.unit_cost as svl_unit_cost,
                 svl_value as amount_svl,
                 case when type='factura' then svl_inv_qty else svl_am_qty end as qty_aml,
                 case when type='factura' then svl_inv_value else svl_am_value end  as amount_aml
             from (
-                select svl.id as svl_id, svl.product_id, svl.location_id, svl.location_dest_id, svl.l10n_ro_account_id,
+                select svl.id as svl_id, svl.product_id, svl.location_id, svl.location_dest_id, svl.account_id,
                     round(svl.quantity,6) svl_qty, svl.unit_cost, round(svl.value,6) svl_value,
                     case when aml.quantity!=0 then
                                 case  when svl.quantity>0 then (round(svl.quantity,6)-aml.quantity)
@@ -81,11 +81,11 @@ class StockAccountingCheck(models.TransientModel):
                                         then round(svl.value,6)-COALESCE(am.amount_currency,amm.amount_currency)
                                     else round(svl.value,6)-COALESCE(am.amount_currency, amm.amount_currency)   end
                             else 0 end as svl_am_value,
-                    case when svl.l10n_ro_invoice_line_id!=NULL and svl.account_move_id=NULL
+                    case when svl.invoice_line_id!=NULL and svl.account_move_id=NULL
                             then 'factura' else 'iesire' end as type
 
                 from stock_valuation_layer svl
-                left join account_move_line aml on aml.id=svl.l10n_ro_invoice_line_id
+                left join account_move_line aml on aml.id=svl.invoice_line_id
                 left join (select aml.product_id, aml.quantity, aml.amount_currency, am.amount_total, am.id as am, aml.id as aml
                            from account_move_line aml, account_move am
                            where aml.move_id=am.id and aml.amount_currency<0 )
@@ -104,7 +104,7 @@ class StockAccountingCheck(models.TransientModel):
             "date_to": fields.Date.to_string(self.date_to),
         }
         if self.account_id.id:
-            query += (" where a.l10n_ro_account_id = %s" % self.account_id.id)
+            query += (" where a.account_id = %s" % self.account_id.id)
         if self.location_id.id:
             if self.account_id.id:
                 query += (" and (a.location_id = %s or a.location_dest_id = %s)"

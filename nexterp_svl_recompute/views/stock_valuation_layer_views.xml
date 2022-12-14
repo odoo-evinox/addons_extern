@@ -25,6 +25,7 @@
                 <field name="new_unit_cost" optional="hide"/>
                 <field name="new_remaining_value" optional="hide"/>
                 <field name="new_remaining_qty" optional="hide"/>
+                <field name="invoice_date" optional="hide"/>                
             </field>
         </field>
     </record>    

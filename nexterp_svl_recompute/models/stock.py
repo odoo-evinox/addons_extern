@@ -17,3 +17,5 @@ class StockValuationLayer(models.Model):
     new_value = fields.Monetary('New Total Value', readonly=True)
     new_remaining_qty = fields.Float(digits=0, readonly=True)
     new_remaining_value = fields.Monetary('New Remaining Value', readonly=True)
+
+    invoice_date = fields.Date(related='invoice_id.date', store=True)
