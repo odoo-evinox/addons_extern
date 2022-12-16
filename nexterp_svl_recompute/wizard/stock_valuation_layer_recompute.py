@@ -483,5 +483,6 @@ class StockValuationLayerRecompute(models.TransientModel):
                             svl.stock_move_id.with_context(force_period_date=svl.create_date)._account_entry_move(
                                 svl.quantity, svl.description, svl.id, svl.value
                             )
+                        self._cr.execute("update account_move set date = %s where id = %s", (svl.create_date, svl.account_move_id.id))
                     except:
                         pass
