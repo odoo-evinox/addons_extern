@@ -194,8 +194,12 @@ class StockValuationLayerRecompute(models.TransientModel):
                     svl_orig = orig_mv.stock_valuation_layer_ids
                     val = abs(sum([s.value for s in svl_orig]))
                     qty = sum([s.quantity for s in svl_orig])
-                    svl.value = round(svl.quantity * abs(val / qty), 2)
-                    svl.unit_cost = round(abs(val / qty), 2)
+                    if abs(qty) > 0.001 :
+                        svl.value = round(svl.quantity * abs(val / qty), 2)
+                        svl.unit_cost = round(abs(val / qty), 2)
+                    else:
+                        svl.value = 0
+                        svl.unit_cost = 0
 
             if (
                     svl.stock_move_id and
@@ -466,23 +470,32 @@ class StockValuationLayerRecompute(models.TransientModel):
                 svl.remaining_qty = svl.new_remaining_qty
                 svl.new_remaining_qty = new
             elif self.update_account_moves:
-                if svl.quantity < 0:
+                if svl.quantity < 0 or 'return' in svl.valued_type:
                     try:
                         svl = svl.sudo()
                         if svl.account_move_id:
                             if svl.value != svl.new_value:
                                 svl.account_move_id._check_fiscalyear_lock_date()
                                 svl.account_move_id.button_draft()
+
                                 line_debit = svl.account_move_id.line_ids.filtered(lambda l: l.balance > 0)
                                 line_debit.with_context(check_move_validity=False).debit = abs(svl.value)
-
+                                line_debit.with_context(check_move_validity=False).credit = 0
+                                line_debit.with_context(check_move_validity=False).amount_currency = abs(svl.value)                            
+                                
                                 line_credit = svl.account_move_id.line_ids.filtered(lambda l: l.balance < 0)
                                 line_credit.with_context(check_move_validity=False).credit = abs(svl.value)
+                                line_credit.with_context(check_move_validity=False).debit = 0
+                                line_credit.with_context(check_move_validity=False).amount_currency = -abs(svl.value)                              
+
                                 svl.account_move_id.action_post()
                         else:
                             svl.stock_move_id.with_context(force_period_date=svl.create_date)._account_entry_move(
                                 svl.quantity, svl.description, svl.id, svl.value
                             )
-                        self._cr.execute("update account_move set date = %s where id = %s", (svl.create_date, svl.account_move_id.id))
+                            if svl.account_move_id:
+                                self._cr.execute(f"update account_move set date = '{svl.create_date.date()}' where id = {svl.account_move_id.id}")  
+                                self._cr.commit()                          
                     except:
                         pass
+

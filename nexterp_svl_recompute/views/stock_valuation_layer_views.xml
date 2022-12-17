@@ -6,6 +6,7 @@
         <field name="arch" type="xml">
             <xpath expr="//page[@name='valuation']/group" position="after">
                 <group>
+                    <field name="invoice_date"/>  
                     <field name="new_value"/>
                     <field name="new_unit_cost"/>
                     <field name="new_remaining_value"/>
