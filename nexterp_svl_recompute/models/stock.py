@@ -18,4 +18,10 @@ class StockValuationLayer(models.Model):
     new_remaining_qty = fields.Float(digits=0, readonly=True)
     new_remaining_value = fields.Monetary('New Remaining Value', readonly=True)
 
-    invoice_date = fields.Date(related='invoice_id.date', store=True, string="Accounting Date")
+    accounting_date = fields.Date(compute="_compute_accounting_date", store=True, string="Accounting Date")
+
+    @api.depends('account_move_id', 'invoice_id')
+    def _compute_accounting_date(self):
+        for svl in self:
+            svl.accounting_date = svl.account_move_id.date or svl.invoice_id.date
+
