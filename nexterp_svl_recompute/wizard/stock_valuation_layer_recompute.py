@@ -232,6 +232,11 @@ class StockValuationLayerRecompute(models.TransientModel):
                                     svl.company_id == svl.location_dest_id.company_id
                                 )
                             )
+                        ) or
+                        (
+                            svl.stock_move_id._is_internal_transfer() and
+                            svl.location_id.scrap_location and
+                            svl.quantity > 0
                         )
                     ):
                     #update average cost
@@ -247,9 +252,16 @@ class StockValuationLayerRecompute(models.TransientModel):
 
                         avg = [new_avg, avg[1] + svl.quantity]
 
-                elif svl.stock_move_id._is_out():
+                elif (
+                        svl.stock_move_id._is_out() or 
+                        (
+                            svl.stock_move_id._is_internal_transfer() and 
+                            svl.location_dest_id.scrap_location and
+                            svl.quantity < 0
+                        )
+                    ):
                     svl_qty = abs(svl.quantity)
-                    if avg[1] <= 0 or avg[1] < svl_qty:
+                    if  0 >= avg[1] or avg[1] < svl_qty:
                         #move svl later, after a reception
                         should_break = shift_svl0_later(svls)
                         if should_break:
@@ -436,6 +448,7 @@ class StockValuationLayerRecompute(models.TransientModel):
                          ("quantity", ">", 0)])
                     qty = quant.quantity
                     for svl in svls.sorted("create_date", reverse=True):
+                        unit_cost = svl.unit_cost or quant.product_id.with_company(self.company_id).standard_price                        
                         if qty > 0:
                             added_cost = 0
                             linked_svl = self.env['stock.valuation.layer'].search([('stock_valuation_layer_id', '=', svl.id)])
@@ -443,15 +456,16 @@ class StockValuationLayerRecompute(models.TransientModel):
                                 added_cost = sum(linked_svl.mapped('value'))
                             if svl.quantity <= qty:
                                 svl.remaining_qty = svl.quantity
-                                svl.remaining_value = svl.quantity * svl.unit_cost + added_cost
+                                svl.remaining_value = svl.quantity * unit_cost + added_cost
                                 qty -= svl.quantity
                             else:
                                 svl.remaining_qty = qty
-                                svl.remaining_value = qty * svl.unit_cost + (qty/svl.quantity)*added_cost
+                                svl.remaining_value = qty * unit_cost + (qty/svl.quantity)*added_cost
                                 qty = 0
-                        else:
-                            svl.remaining_qty = 0
-                            svl.remaining_value = 0
+
+                        if not svl.unit_cost:
+                            svl.unit_cost = unit_cost
+
 
             self.env.cr.commit()
 
