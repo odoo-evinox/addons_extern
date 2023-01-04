@@ -10,7 +10,10 @@ from dateutil.relativedelta import relativedelta
 
 _interval = {
     '15': lambda count: relativedelta(days=count*15),
-    '30': lambda count: relativedelta(days=count*30)
+    '30': lambda count: relativedelta(days=count*30),
+    '90': lambda count: relativedelta(days=count*90),
+    '180': lambda count: relativedelta(days=count*180),
+    '365': lambda count: relativedelta(days=count*365)
 }
 
 NUMBER_INTERVALS = 5
@@ -38,7 +41,7 @@ class SVLAgeReport(models.TransientModel):
     product_id = fields.Many2one('product.product', "Related product", check_company=True)
     date_ref = fields.Date("Reference Date", default=fields.Date.today)
 
-    interval_days = fields.Selection(string="Days", selection=[('15', '15 days'), ('30', '30 days')], default="15")
+    interval_days = fields.Selection(string="Days", selection=[('15', '15 days'), ('30', '30 days'), ('90', '90 days'), ('180', '180 days'), ('365', '365 days')], default="15")
 
     location_ids = fields.One2many(
         'l10n.ro.svl.age.report.location',
