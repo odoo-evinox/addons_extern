@@ -6,6 +6,7 @@
         <field name="arch" type="xml">
             <xpath expr="//page[@name='valuation']/group" position="after">
                 <group>
+                    <field name="accounting_date"/>  
                     <field name="new_value"/>
                     <field name="new_unit_cost"/>
                     <field name="new_remaining_value"/>
@@ -23,8 +24,9 @@
             <field name="company_id" position="before">
                 <field name="new_value" sum="New Total Value"/>
                 <field name="new_unit_cost" optional="hide"/>
-                <field name="new_remaining_value" optional="hide"/>
+                <field name="new_remaining_value" optional="hide" sum="Total Rem Value"/>
                 <field name="new_remaining_qty" optional="hide"/>
+                <field name="accounting_date" optional="hide"/>                
             </field>
         </field>
     </record>    

@@ -52,7 +52,10 @@ class StockValuationLayerRecompute(models.TransientModel):
     @api.model
     def default_get(self, fields):
         res = super().default_get(fields)
-        locs = self.env['stock.location'].search([('usage', '=', 'internal')], order="id")
+        locs = self.env['stock.location'].search([
+            ('usage', '=', 'internal'), ('scrap_location', '=', False)
+        ], order="id")
+
         location_ids = []
         idx = 10
         for loc in locs:
@@ -66,8 +69,8 @@ class StockValuationLayerRecompute(models.TransientModel):
     def buttton_do_correction(self):
         self._prepare_svls()
         self.action_start_recompute()
-        self._fix_remaining_qty_value()
-        self._finalize_svls()
+        self._fix_remaining_qty_value()                
+        self._finalize_svls()        
 
     def _prepare_svls(self):
         #backup unit_cost and value
@@ -106,8 +109,6 @@ class StockValuationLayerRecompute(models.TransientModel):
             if product.cost_method == "average":
                 self._run_average(product, locations.ids)
 
-        self._fix_remaining_qty_value()
-
         return True
 
     def _run_average(self, product, locations):
@@ -137,10 +138,45 @@ class StockValuationLayerRecompute(models.TransientModel):
         date_from = fields.Datetime.to_datetime(self.date_from)
         avg = [0, 0]
         product = product.with_context(to_date=self.date_from)
+        last_svl_before_date = None
+ 
         if product.quantity_svl > 0.01:
             quantity_svl = round(product.quantity_svl, 2)
             value_svl = max(0, round(product.value_svl, 2))
             avg = [round(value_svl / quantity_svl, 2), quantity_svl]
+        else:
+            dom = ['&',
+                '&',
+                    ('product_id', '=', product.id),
+                    ('create_date', '<', date_from),
+                '|',
+                        ('location_dest_id', 'in', locations),
+                        ('location_id', "in", locations),
+                ]
+
+            value_svl = product.value_svl
+            last_svl_before_date = self.env['stock.valuation.layer'].search(
+                    dom, limit=1, order='create_date desc')            
+            if round(value_svl, 6):
+                if last_svl_before_date:
+                    svl = self.env['stock.valuation.layer'].create({
+                     'company_id': self.company_id.id,
+                     'product_id': product.id,
+                     'create_date': last_svl_before_date.create_date,
+                     'stock_move_id': last_svl_before_date.stock_move_id.id,
+                     'quantity': 0,
+                     'value': -value_svl,
+                     'new_value': -value_svl,
+                     'description': "fix 0 qty value for BEFORE RECOMPUTE DATE",
+                     'location_id': last_svl_before_date.location_id.id,
+                     'location_dest_id': last_svl_before_date.location_dest_id.id,
+                     'account_id': last_svl_before_date.account_id.id
+                    })
+                    self._cr.execute("update stock_valuation_layer set create_date = '%s' where id = %s" % (
+                        last_svl_before_date.create_date, svl.id))
+                    #svl.stock_move_id.with_context(force_period_date=svl.create_date)._account_entry_move(
+                    #    svl.quantity, svl.description, svl.id, svl.value)    
+
 
         domain = ['&',
                     '&',
@@ -148,105 +184,136 @@ class StockValuationLayerRecompute(models.TransientModel):
                         ('create_date', '>=', date_from),
                     '|',
                         '&',
-                            ('location_dest_id', 'in', locations),
-                            ('quantity', '>', 0.001),
-                        '&',
-                            ('location_id', "in", locations),
-                            ('quantity', '<', 0.001),
+                            ('description', 'like', 'Product value manually modified'),
+                            ('valued_type', '=', False),
+                        '|',
+                            '&',
+                                ('location_dest_id', 'in', locations),
+                                ('quantity', '>', 0.001),
+                            '&',
+                                ('location_id', "in", locations),
+                                ('quantity', '<', 0.001),
                 ]
 
         svls = list(self.env['stock.valuation.layer'].search(domain).sorted(lambda svl: svl.create_date))
-
+        last_avg = avg[0]
         while svls:
             svl = svls[0]
-            if svl.l10n_ro_valued_type and 'return' in svl.l10n_ro_valued_type:
-                orig_mv = svl.stock_move_id.move_orig_ids
-                if orig_mv:
-                    svl_orig = orig_mv.stock_valuation_layer_ids
-                    val = abs(sum([s.value for s in svl_orig]))
-                    qty = sum([s.quantity for s in svl_orig])
-                    svl.value = round(svl.quantity * abs(val / qty), 2)
-                    svl.unit_cost = round(abs(val / qty), 2)
 
-            if (
-                    svl.stock_move_id and
-                    (
-                        svl.stock_move_id._is_in() or
-                        (
-                            svl.stock_move_id._is_internal_transfer()
-                            and
-                            (
-                                svl.stock_move_id.location_id.company_id !=
-                                svl.stock_move_id.location_dest_id.company_id
-                            )
-                            and
-                            (
-                                svl.company_id == svl.location_dest_id.company_id
-                            )
-                            and svl.quantity > 0
-                        )
-                    )
-                ):
-                #update average cost
+            if not svl.valued_type and svl.quantity == 0 and avg[1] > 0:
+                #Product value manually modified
                 old_value = avg[0] * avg[1]
-                #include landed costs and price diffs
-                svl_val = sum([s.value for s in (svl + svl.stock_valuation_layer_ids)])
+                new_avg = (old_value + svl.value) / (avg[1])
+                avg = [new_avg, avg[1]]
 
-                if (avg[1] + svl.quantity) > 0:
-                    new_avg = (old_value + svl_val) / (avg[1] + svl.quantity)
-                else:
-                    new_avg = 0
-
-                avg = [new_avg, avg[1] + svl.quantity]
-
-            elif svl.stock_move_id._is_out():
-                svl_qty = abs(svl.quantity)
-                if avg[1] <= 0 or avg[1] < svl_qty:
-                    #move svl later, after a reception
-                    should_break = shift_svl0_later(svls)
-                    if should_break:
-                        break
-                else:
-                    if 'return' not in svl.l10n_ro_valued_type:
-                        svl.unit_cost = round(avg[0], 2)
-                        svl.value = round(avg[0] * svl.quantity, 2)
-                    else:
-                        if (avg[1] - abs(svl.quantity)) > 0:
-                            avg[0] = (avg[0] * avg[1] - abs(svl.value)) / (avg[1] - abs(svl.quantity))
+            else:
+                if svl.valued_type and 'return' in svl.valued_type:
+                    orig_mv = svl.stock_move_id.move_orig_ids
+                    if orig_mv:
+                        svl_orig = orig_mv.stock_valuation_layer_ids
+                        val = abs(sum([s.value for s in svl_orig]))
+                        qty = sum([s.quantity for s in svl_orig])
+                        if abs(qty) > 0.001 :
+                            svl.value = round(svl.quantity * abs(val / qty), 2)
+                            svl.unit_cost = round(abs(val / qty), 2)
                         else:
-                            avg[0] = 0
-                    avg[1] = max(0, avg[1] - abs(svl.quantity))
+                            svl.value = 0
+                            svl.unit_cost = 0
 
-            elif svl.stock_move_id._is_internal_transfer() and svl.quantity < 0:
-                svl.unit_cost = round(avg[0], 2)
-                svl.value = round(avg[0] * svl.quantity, 2)
+                if (
+                        svl.stock_move_id and
+                        (
+                            svl.stock_move_id._is_in() or
+                            (
+                                svl.stock_move_id._is_internal_transfer()
+                                and
+                                (
+                                    svl.stock_move_id.location_id.company_id !=
+                                    svl.stock_move_id.location_dest_id.company_id
+                                )
+                                and
+                                (
+                                    svl.company_id == svl.location_dest_id.company_id
+                                )
+                            )
+                        ) or
+                        (
+                            svl.stock_move_id._is_internal_transfer() and
+                            svl.location_id.scrap_location and
+                            svl.quantity > 0
+                        )
+                    ):
+                    #update average cost
+                    if  svl.quantity > 0:
+                        old_value = avg[0] * avg[1]
+                        #include landed costs and price diffs
+                        svl_val = sum([s.value for s in (svl + svl.stock_valuation_layer_ids)])
 
-                svl_plus = svl.stock_move_id.stock_valuation_layer_ids.filtered(lambda s: s.quantity > 0)
-                if svl.company_id != svl.location_dest_id.company_id:
-                    mv_dest = svl.stock_move_id.with_company(svl.location_dest_id.company_id).move_dest_ids
-                    svl_plus = mv_dest.sudo().stock_valuation_layer_ids.filtered(lambda s: s.quantity > 0)
+                        if (avg[1] + svl.quantity) > 0:
+                            new_avg = (old_value + svl_val) / (avg[1] + svl.quantity)
+                        else:
+                            new_avg = 0
 
-                svl_plus.sudo().unit_cost = round(avg[0], 2)
-                svl_plus.sudo().value = round(svl_plus.quantity * avg[0], 2)
+                        avg = [new_avg, avg[1] + svl.quantity]
 
-
-                if svl.company_id != svl.location_dest_id.company_id:
+                elif (
+                        svl.stock_move_id._is_out() or 
+                        (
+                            svl.stock_move_id._is_internal_transfer() and 
+                            svl.location_dest_id.scrap_location and
+                            svl.quantity < 0
+                        )
+                    ):
                     svl_qty = abs(svl.quantity)
-                    if avg[1] <= 0 or avg[1] < svl_qty:
+                    if  0 >= avg[1] or avg[1] < svl_qty:
+                        #move svl later, after a reception
                         should_break = shift_svl0_later(svls)
                         if should_break:
                             break
                     else:
-                        if (avg[1] - abs(svl.quantity)) > 0:
-                            avg[0] = (avg[0] * avg[1] - abs(svl.value)) / (avg[1] - abs(svl.quantity))
+                        if 'return' not in svl.valued_type:
+                            svl.unit_cost = round(avg[0], 2)
+                            svl.value = round(avg[0] * svl.quantity, 2)
                         else:
-                            avg[0] = 0
+                            if (avg[1] - abs(svl.quantity)) > 0:
+                                avg[0] = (avg[0] * avg[1] - abs(svl.value)) / (avg[1] - abs(svl.quantity))
+                            else:
+                                avg[0] = 0
                         avg[1] = max(0, avg[1] - abs(svl.quantity))
+
+                elif svl.stock_move_id._is_internal_transfer() and svl.quantity < 0:
+                    svl.unit_cost = round(avg[0], 2)
+                    svl.value = round(avg[0] * svl.quantity, 2)                      
+
+                    svl_plus = svl.stock_move_id.sudo().stock_valuation_layer_ids.filtered(lambda s: s.quantity > 0)
+                    if svl.company_id != svl.location_dest_id.company_id:
+                        mv_dest = svl.stock_move_id.with_company(svl.location_dest_id.company_id).move_dest_ids
+                        svl_plus |= mv_dest.sudo().stock_valuation_layer_ids#.filtered(lambda s: s.quantity > 0)
+
+                    for svlp in svl_plus:
+                        svlp.sudo().unit_cost = round(avg[0], 2)
+                        svlp.sudo().value = round(svlp.quantity * avg[0], 2)               
+                    
+                    if svl.company_id != svl.location_dest_id.company_id:
+                        svl_qty = abs(svl.quantity)
+                        if avg[1] <= 0 or avg[1] < svl_qty:
+                            should_break = shift_svl0_later(svls)
+                            if should_break:
+                                break
+                        else:
+                            if (avg[1] - abs(svl.quantity)) > 0:
+                                avg[0] = (avg[0] * avg[1] - abs(svl.value)) / (avg[1] - abs(svl.quantity))
+                            else:
+                                avg[0] = 0
+                            avg[1] = max(0, avg[1] - abs(svl.quantity))
 
 
             svls = svls[1:]
+            last_avg = round(avg[0], 3) or last_avg
 
-        product.sudo().with_company(self.env.company).with_context(disable_auto_svl=True).standard_price = avg[0]
+        if not round(last_avg, 3) and last_svl_before_date:
+            last_avg = last_svl_before_date.unit_cost
+        product.sudo().with_company(self.env.company).with_context(disable_auto_svl=True).standard_price = last_avg
 
     def _run_fifo(self, product, loc):
         date_from = fields.Datetime.to_datetime(self.date_from)
@@ -369,8 +436,16 @@ class StockValuationLayerRecompute(models.TransientModel):
             else:
                 products = self.product_id or self.env['product.product'].search([])
 
+            locations = self.location_ids.mapped('location_id')
+            svls = self.env['stock.valuation.layer'].search([('product_id', 'in', products.ids)])
+            svls.write({
+                'remaining_qty': 0,
+                'remaining_value': 0,
+            })
             # Fix remaining qty
-            for quant in self.env['stock.quant'].search([('product_id', 'in', products.ids)]):
+            for quant in self.env['stock.quant'].search(
+                    [('product_id', 'in', products.ids), ('location_id', 'in', locations.ids)]
+                ):
                 if quant.location_id.usage == "internal":
                     svls = self.env['stock.valuation.layer'].search(
                         [("product_id", "=", quant.product_id.id),
@@ -378,6 +453,7 @@ class StockValuationLayerRecompute(models.TransientModel):
                          ("quantity", ">", 0)])
                     qty = quant.quantity
                     for svl in svls.sorted("create_date", reverse=True):
+                        unit_cost = svl.unit_cost or quant.product_id.with_company(self.company_id).standard_price                        
                         if qty > 0:
                             added_cost = 0
                             linked_svl = self.env['stock.valuation.layer'].search([('stock_valuation_layer_id', '=', svl.id)])
@@ -385,12 +461,17 @@ class StockValuationLayerRecompute(models.TransientModel):
                                 added_cost = sum(linked_svl.mapped('value'))
                             if svl.quantity <= qty:
                                 svl.remaining_qty = svl.quantity
-                                svl.remaining_value = svl.quantity * svl.unit_cost + added_cost
+                                svl.remaining_value = svl.quantity * unit_cost + added_cost
                                 qty -= svl.quantity
                             else:
                                 svl.remaining_qty = qty
-                                svl.remaining_value = qty * svl.unit_cost + (qty/svl.quantity)*added_cost
+                                svl.remaining_value = qty * unit_cost + (qty/svl.quantity)*added_cost
                                 qty = 0
+
+                        if not svl.unit_cost:
+                            svl.unit_cost = unit_cost
+
+
             self.env.cr.commit()
 
     def _finalize_svls(self):
@@ -434,27 +515,33 @@ class StockValuationLayerRecompute(models.TransientModel):
                 new = svl.remaining_qty
                 svl.remaining_qty = svl.new_remaining_qty
                 svl.new_remaining_qty = new
-            
-            if self.update_account_moves:
-                if svl.quantity < 0:
+            elif self.update_account_moves:
+                if svl.quantity < 0 or 'return' in svl.valued_type:
                     try:
                         svl = svl.sudo()
                         if svl.account_move_id:
                             if svl.value != svl.new_value:
-                                try:
-                                    svl.account_move_id._check_fiscalyear_lock_date()
-                                    svl.account_move_id.button_draft()
-                                    line_debit = svl.account_move_id.line_ids.filtered(lambda l: l.balance > 0)
-                                    line_debit.with_context(check_move_validity=False).debit = abs(svl.value)
+                                svl.account_move_id._check_fiscalyear_lock_date()
+                                svl.account_move_id.button_draft()
 
-                                    line_credit = svl.account_move_id.line_ids.filtered(lambda l: l.balance < 0)
-                                    line_credit.with_context(check_move_validity=False).credit = abs(svl.value)
-                                    svl.account_move_id.action_post()
-                                except UserError:
-                                    pass
+                                line_debit = svl.account_move_id.line_ids.filtered(lambda l: l.balance > 0)
+                                line_debit.with_context(check_move_validity=False).debit = abs(svl.value)
+                                line_debit.with_context(check_move_validity=False).credit = 0
+                                line_debit.with_context(check_move_validity=False).amount_currency = abs(svl.value)                            
+                                
+                                line_credit = svl.account_move_id.line_ids.filtered(lambda l: l.balance < 0)
+                                line_credit.with_context(check_move_validity=False).credit = abs(svl.value)
+                                line_credit.with_context(check_move_validity=False).debit = 0
+                                line_credit.with_context(check_move_validity=False).amount_currency = -abs(svl.value)                              
+
+                                svl.account_move_id.action_post()
                         else:
                             svl.stock_move_id.with_context(force_period_date=svl.create_date)._account_entry_move(
                                 svl.quantity, svl.description, svl.id, svl.value
                             )
+                            if svl.account_move_id:
+                                self._cr.execute(f"update account_move set date = '{svl.create_date.date()}' where id = {svl.account_move_id.id}")  
+                                self._cr.commit()                          
                     except:
                         pass
+
