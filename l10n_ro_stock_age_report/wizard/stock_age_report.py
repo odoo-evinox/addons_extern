@@ -16,7 +16,7 @@ _interval = {
     '365': lambda count: relativedelta(days=count*365)
 }
 
-NUMBER_INTERVALS = 5
+NUMBER_INTERVALS = 6
 
 class SVLAgeReportLocation(models.TransientModel):
     _name = 'l10n.ro.svl.age.report.location'
@@ -150,10 +150,10 @@ class SVLAgeReport(models.TransientModel):
                             ('create_date', '>', svl_date_to),
                     '|',
                         '&',
-                            ('location_dest_id', 'in', locations), 
+                            ('l10n_ro_location_dest_id', 'in', locations),
                             ('quantity', '>', 0.001),
                         '&',
-                            ('location_id', "in", locations),
+                            ('l10n_ro_location_id', "in", locations),
                             ('quantity', '<', 0.001),
                 ]
 
