@@ -491,7 +491,7 @@ class StockValuationLayerRecompute(models.TransientModel):
                 if quant.location_id.usage == "internal":
                     svls = self.env['stock.valuation.layer'].search(
                         [("product_id", "=", quant.product_id.id),
-                         ("location_dest_id", "=", quant.location_id.id),
+                         ("l10n_ro_location_dest_id", "=", quant.location_id.id),
                          ("quantity", ">", 0)])
                     qty = quant.quantity
                     for svl in svls.sorted("create_date", reverse=True):
