@@ -240,7 +240,7 @@ class StockValuationLayerRecompute(models.TransientModel):
                                 )
                                 and
                                 (
-                                    svl.company_id == svl.location_dest_id.company_id
+                                    svl.company_id == svl.l10n_ro_location_dest_id.company_id
                                 )
                             )
                         ) or
@@ -267,7 +267,7 @@ class StockValuationLayerRecompute(models.TransientModel):
                         svl.stock_move_id._is_out() or 
                         (
                             svl.stock_move_id._is_internal_transfer() and 
-                            svl.location_dest_id.scrap_location and
+                            svl.l10n_ro_location_dest_id.scrap_location and
                             svl.quantity < 0
                         )
                     ):
@@ -293,15 +293,15 @@ class StockValuationLayerRecompute(models.TransientModel):
                     svl.value = round(avg[0] * svl.quantity, 2)                      
 
                     svl_plus = svl.stock_move_id.sudo().stock_valuation_layer_ids.filtered(lambda s: s.quantity > 0)
-                    if svl.company_id != svl.location_dest_id.company_id:
-                        mv_dest = svl.stock_move_id.with_company(svl.location_dest_id.company_id).move_dest_ids
+                    if svl.company_id != svl.l10n_ro_location_dest_id.company_id:
+                        mv_dest = svl.stock_move_id.with_company(svl.l10n_ro_location_dest_id.company_id).move_dest_ids
                         svl_plus |= mv_dest.sudo().stock_valuation_layer_ids#.filtered(lambda s: s.quantity > 0)
 
                     for svlp in svl_plus:
                         svlp.sudo().unit_cost = round(avg[0], 2)
                         svlp.sudo().value = round(svlp.quantity * avg[0], 2)               
                     
-                    if svl.company_id != svl.location_dest_id.company_id:
+                    if svl.company_id != svl.l10n_ro_location_dest_id.company_id:
                         svl_qty = abs(svl.quantity)
                         if avg[1] <= 0 or avg[1] < svl_qty:
                             should_break = shift_svl0_later(svls)
