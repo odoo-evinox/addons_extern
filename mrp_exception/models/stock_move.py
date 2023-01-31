@@ -15,20 +15,16 @@ class StockMove(models.Model):
 
     def _get_main_records(self):
         stock_move_with_mrp = self.filtered(lambda l: l.raw_material_production_id)
-        stock_move_with_picking = self.filtered(lambda l: l.picking_id)
-        if stock_move_with_picking:
-            return stock_move_with_picking.mapped("picking_id")
         if stock_move_with_mrp:
             return stock_move_with_mrp.mapped("raw_material_production_id")
+        return super()._get_main_records()
 
     @api.model
     def _reverse_field(self):
         stock_move_with_mrp = self.filtered(lambda l: l.raw_material_production_id)
-        stock_move_with_picking = self.filtered(lambda l: l.picking_id)
-        if stock_move_with_picking:
-            return "picking_ids"
         if stock_move_with_mrp:
             return "production_ids"
+        return super()._reverse_field()
 
     def mrp_detect_exceptions(self, moves, rule):
         if rule.exception_type == "by_py_code":
@@ -38,14 +34,6 @@ class StockMove(models.Model):
 
     def _detect_exceptions(self, rule):
         stock_move_with_mrp = self.filtered(lambda l: l.raw_material_production_id)
-        stock_move_with_picking = self.filtered(lambda l: l.picking_id)
-        if stock_move_with_picking:
-            picking = self.mrp_detect_exceptions(stock_move_with_picking, rule)
-            if picking:
-                picking.exception_ids = [(4, rule.id)]
-                return picking.mapped("picking_id")
-            else:
-                return self.env['stock.picking']
         if stock_move_with_mrp:
             mrp = self.mrp_detect_exceptions(stock_move_with_mrp, rule)
             if mrp:
@@ -53,3 +41,5 @@ class StockMove(models.Model):
                 return mrp.mapped("raw_material_production_id")
             else:
                 return self.env['mrp.production']
+        else:
+            return super()._detect_exceptions(rule)
