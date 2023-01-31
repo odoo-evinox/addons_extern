@@ -423,7 +423,8 @@ class StockValuationLayerRecompute(models.TransientModel):
                             )
                             if other_svl:
                                 other_svl.unit_cost = svl_out.unit_cost
-                                other_svl.value = other_svl.quantity * svl_out.unit_cost
+                                for o_svl in other_svl:
+                                    o_svl.value = o_svl.quantity * svl_out.unit_cost
                         if should_restart_fifo:
                             svl_ret = self.env['stock.valuation.layer'].search(
                                 [('stock_move_id', 'in', svl_out.stock_move_id.move_dest_ids.ids)], order="id asc")
