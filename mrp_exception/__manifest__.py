@@ -11,7 +11,7 @@
     "Sodexis, "
     "Camptocamp, "
     "Odoo Community Association (OCA)",
-    "depends": ["mrp", "stock_exception"],
+    "depends": ["mrp", "nexterp_stock_exception"],
     "license": "AGPL-3",
     "data": [
         "security/ir.model.access.csv",
