@@ -45,7 +45,7 @@ class StockMove(models.Model):
                 picking.exception_ids = [(4, rule.id)]
                 return picking.mapped("picking_id")
             else:
-                return self.env['mrp.production']
+                return self.env['stock.picking']
         if stock_move_with_mrp:
             mrp = self.mrp_detect_exceptions(stock_move_with_mrp, rule)
             if mrp:
