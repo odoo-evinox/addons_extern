@@ -185,7 +185,7 @@ class SVLAgeReport(models.TransientModel):
                        ('create_date', '<=', period_date_from),
                        ('create_date', '>', period_date_to),
                        ('l10n_ro_location_dest_id', 'in', locations),
-                       ('quantity', '>=', 0.001),
+                       ('quantity', '>=', 0.000),
                        ('l10n_ro_valued_type', "!=", 'internal_transfer'),
                        ]
 
@@ -194,7 +194,7 @@ class SVLAgeReport(models.TransientModel):
                        ('create_date', '<=', period_date_from),
                        ('create_date', '>', period_date_to),
                        ('l10n_ro_location_id', "in", locations),
-                       ('quantity', '<', 0.001),
+                       ('quantity', '<', 0.000),
                        ('l10n_ro_valued_type', "!=", 'internal_transfer'),
                        ]
             svls_in = self.env['stock.valuation.layer'].\
