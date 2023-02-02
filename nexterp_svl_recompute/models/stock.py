@@ -23,5 +23,5 @@ class StockValuationLayer(models.Model):
     @api.depends('account_move_id', 'l10n_ro_invoice_id')
     def _compute_accounting_date(self):
         for svl in self:
-            svl.accounting_date = svl.account_move_id.date or svl.l10n_ro_invoice_id.date
+            svl.accounting_date = (svl.account_move_id and svl.account_move_id.date) or (svl.l10n_ro_invoice_id and svl.l10n_ro_invoice_id.date) or svl.create_date
 

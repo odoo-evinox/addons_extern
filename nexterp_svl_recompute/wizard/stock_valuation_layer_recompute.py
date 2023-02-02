@@ -46,6 +46,10 @@ class StockValuationLayerRecompute(models.TransientModel):
     update_svl_values = fields.Boolean(
         default=False
     )
+    run_svl_recompute = fields.Boolean(
+        default=True
+    )
+
 
     @api.onchange('update_account_moves')
     def onchange_upd_account_moves(self):
@@ -71,8 +75,9 @@ class StockValuationLayerRecompute(models.TransientModel):
 
     def buttton_do_correction(self):
         self._prepare_svls()
-        self.action_start_recompute()
-        if self.recompute_type == 'fifo_average':
+        if self.run_svl_recompute:
+            self.action_start_recompute()
+        if self.fix_remaining_qty:
             self._fix_remaining_qty_value()                
         self._finalize_svls()        
 
@@ -473,49 +478,48 @@ class StockValuationLayerRecompute(models.TransientModel):
 
 
     def _fix_remaining_qty_value(self):
-        if self.fix_remaining_qty:
-            if self.product_id:
-                products = self.product_id
-            else:
-                products = self.product_id or self.env['product.product'].search([])
+        if self.product_id:
+            products = self.product_id
+        else:
+            products = self.product_id or self.env['product.product'].search([])
 
-            locations = self.location_ids.mapped('location_id')
-            svls = self.env['stock.valuation.layer'].search([('product_id', 'in', products.ids)])
-            svls.write({
-                'remaining_qty': 0,
-                'remaining_value': 0,
-            })
-            # Fix remaining qty
-            for quant in self.env['stock.quant'].search(
-                    [('product_id', 'in', products.ids), ('location_id', 'in', locations.ids)]
-                ):
-                if quant.location_id.usage == "internal":
-                    svls = self.env['stock.valuation.layer'].search(
-                        [("product_id", "=", quant.product_id.id),
-                         ("l10n_ro_location_dest_id", "=", quant.location_id.id),
-                         ("quantity", ">", 0)])
-                    qty = quant.quantity
-                    for svl in svls.sorted("create_date", reverse=True):
-                        unit_cost = svl.unit_cost or quant.product_id.with_company(self.company_id).standard_price                        
-                        if qty > 0:
-                            added_cost = 0
-                            linked_svl = self.env['stock.valuation.layer'].search([('stock_valuation_layer_id', '=', svl.id)])
-                            if linked_svl:
-                                added_cost = sum(linked_svl.mapped('value'))
-                            if svl.quantity <= qty:
-                                svl.remaining_qty = svl.quantity
-                                svl.remaining_value = svl.quantity * unit_cost + added_cost
-                                qty -= svl.quantity
-                            else:
-                                svl.remaining_qty = qty
-                                svl.remaining_value = qty * unit_cost + (qty/svl.quantity)*added_cost
-                                qty = 0
+        locations = self.location_ids.mapped('location_id')
+        if len(products) == 1:
+            self._cr.execute("""update stock_valuation_layer set remaining_qty = 0, remaining_value = 0 where product_id = %s""", (products.id,))
+        elif products:
+            self._cr.execute("""update stock_valuation_layer set remaining_qty = 0, remaining_value = 0 where product_id in %s""", (tuple(products.ids),))
+        self.env.cr.commit()        
 
-                        if not svl.unit_cost:
-                            svl.unit_cost = unit_cost
+        # Fix remaining qty
+        for quant in self.env['stock.quant'].search(
+                [('product_id', 'in', products.ids), ('location_id', 'in', locations.ids)]
+            ):
+            if quant.location_id.usage == "internal":
+                svls = self.env['stock.valuation.layer'].search(
+                    [("product_id", "=", quant.product_id.id),
+                        ("l10n_ro_location_dest_id", "=", quant.location_id.id),
+                        ("quantity", ">", 0)])
+                qty = quant.quantity
+                for svl in svls.sorted("create_date", reverse=True):
+                    unit_cost = svl.unit_cost or quant.product_id.with_company(self.company_id).standard_price                        
+                    if qty > 0:
+                        added_cost = 0
+                        linked_svl = self.env['stock.valuation.layer'].search([('stock_valuation_layer_id', '=', svl.id)])
+                        if linked_svl:
+                            added_cost = sum(linked_svl.mapped('value'))
+                        if svl.quantity <= qty:
+                            svl.remaining_qty = svl.quantity
+                            svl.remaining_value = svl.quantity * unit_cost + added_cost
+                            qty -= svl.quantity
+                        else:
+                            svl.remaining_qty = qty
+                            svl.remaining_value = qty * unit_cost + (qty/svl.quantity)*added_cost
+                            qty = 0
+        
+                    if not svl.unit_cost:
+                        svl.unit_cost = unit_cost
+        self._cr.commit()
 
-
-            self.env.cr.commit()
 
     def _finalize_svls(self):
         #switch new_unit_cost vs unit_cost
@@ -541,6 +545,7 @@ class StockValuationLayerRecompute(models.TransientModel):
                 ]
 
         svls = self.env['stock.valuation.layer'].search(domain)
+        not_posted = False
         for svl in svls:
             if not self.update_svl_values:
                 new = svl.unit_cost
@@ -559,14 +564,14 @@ class StockValuationLayerRecompute(models.TransientModel):
                 svl.remaining_qty = svl.new_remaining_qty
                 svl.new_remaining_qty = new
 
-            elif self.update_account_moves:
+            if self.update_account_moves:
                 if (svl.quantity < 0 or 
                     'return' in svl.l10n_ro_valued_type or 
                     svl.l10n_ro_valued_type == 'production'):
                     try:
                         svl = svl.sudo()
                         if svl.account_move_id:
-                            if abs(svl.value) != abs(svl.account_move_id.amount_total):
+                            if round(abs(svl.value) - abs(svl.account_move_id.amount_total), 5) != 0:
                                 svl.account_move_id._check_fiscalyear_lock_date()
                                 svl.account_move_id.button_draft()
 
@@ -580,16 +585,33 @@ class StockValuationLayerRecompute(models.TransientModel):
                                 line_credit.with_context(check_move_validity=False).debit = 0
                                 line_credit.with_context(check_move_validity=False).amount_currency = -abs(svl.value)                              
 
-                                svl.account_move_id.action_post()
+
+                                try:
+                                    svl.account_move_id.with_context(force_period_date=svl.create_date).action_post()
+                                except Exception as e:
+                                    #if not not_posted:
+                                    #    import ipdb; ipdb.set_trace(context=15)
+                                    not_posted = True
+                                    pass
                         else:
-                            svl.stock_move_id.with_context(force_period_date=svl.create_date)._account_entry_move(
-                                svl.quantity, svl.description, svl.id, svl.value
-                            )
-                            if svl.account_move_id:
-                                self._cr.execute(f"update account_move set date = '{svl.create_date.date()}' where id = {svl.account_move_id.id}")  
-                                self._cr.commit()                          
+                            if svl.value != 0:
+                                try:
+                                    svl.stock_move_id.with_context(force_period_date=svl.create_date)._account_entry_move(
+                                        svl.quantity, svl.description, svl.id, svl.value
+                                    )
+                                    if svl.account_move_id:
+                                        self._cr.execute(f"update account_move set date = '{svl.create_date.date()}' where id = {svl.account_move_id.id}")  
+                                        self._cr.commit()                          
+                                    print(f"SVL ID {svl.id} a creat nota contabila")
+                                except Exception as e:
+                                    #if not not_posted:
+                                    #    import ipdb; ipdb.set_trace(context=15)                                    
+                                    not_posted = True
+                                    pass
                     except:
                         pass
             else:
                 #raman noile valori de pe svl
                 pass
+        if not_posted:
+            print("Nu s-au putut posta toate notele contabile")
