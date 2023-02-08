@@ -6,7 +6,14 @@ from odoo.exceptions import UserError
 from odoo.tools import float_is_zero
 from collections import defaultdict
 
+"""
+fields = self.env['svl.recompute']._fields
+fields = list(fields.keys())
+defaults = self.env['svl.recompute'].default_get(fields)
+defaults.update(update_account_moves=True, update_svl_values=True, run_svl_recompute=False, date_from='2022-01-01')
+wiz = self.env['svl.recompute'].create(defaults)
 
+"""
 class SVLRecomputeLocation(models.TransientModel):
     _name = 'svl.recompute.location'
     _order = 'sequence, id'
@@ -522,8 +529,6 @@ class StockValuationLayerRecompute(models.TransientModel):
 
 
     def _finalize_svls(self):
-        #switch new_unit_cost vs unit_cost
-        # and new_value vs value
         if self.product_id:
             products = self.product_id
         else:
@@ -545,9 +550,10 @@ class StockValuationLayerRecompute(models.TransientModel):
                 ]
 
         svls = self.env['stock.valuation.layer'].search(domain)
-        not_posted = False
         for svl in svls:
             if not self.update_svl_values:
+                #switch new_unit_cost vs unit_cost
+                # and new_value vs value
                 new = svl.unit_cost
                 svl.unit_cost = svl.new_unit_cost
                 svl.new_unit_cost = new
@@ -565,10 +571,20 @@ class StockValuationLayerRecompute(models.TransientModel):
                 svl.new_remaining_qty = new
 
             if self.update_account_moves:
-                if (svl.quantity < 0 or 
-                    'return' in svl.l10n_ro_valued_type or 
-                    svl.l10n_ro_valued_type == 'production'):
-                    try:
+                if (svl.l10n_ro_valued_type == 'delivery_note_return'):
+                    all_je = self.env['account.move'].search([('ref', '=', svl.description)])
+                    if all_je:
+                        self._cr.execute("""delete from account_move where id in %s""", (tuple(all_je.ids),))
+                        svl.stock_move_id.with_context(force_period_date=svl.create_date)._account_entry_move(
+                                            svl.quantity, svl.description, svl.id, svl.value
+                    #if svl.account_move_id:
+                    #    self._cr.execute(f"update account_move set date = '{svl.create_date.date()}' where id = {svl.account_move_id.id}")  
+                    #    self._cr.execute(f"update account_move_line set date = '{svl.create_date.date()}' where id = {svl.account_move_id.id}")  
+
+                                        )
+                else:
+                    if (svl.quantity < 0 or ('return' in svl.l10n_ro_valued_type) or svl.l10n_ro_valued_type == 'production'):
+
                         svl = svl.sudo()
                         if svl.account_move_id:
                             if round(abs(svl.value) - abs(svl.account_move_id.amount_total), 5) != 0:
@@ -585,33 +601,12 @@ class StockValuationLayerRecompute(models.TransientModel):
                                 line_credit.with_context(check_move_validity=False).debit = 0
                                 line_credit.with_context(check_move_validity=False).amount_currency = -abs(svl.value)                              
 
-
-                                try:
-                                    svl.account_move_id.with_context(force_period_date=svl.create_date).action_post()
-                                except Exception as e:
-                                    #if not not_posted:
-                                    #    import ipdb; ipdb.set_trace(context=15)
-                                    not_posted = True
-                                    pass
+                                svl.account_move_id.with_context(force_period_date=svl.create_date).action_post()
                         else:
                             if svl.value != 0:
-                                try:
-                                    svl.stock_move_id.with_context(force_period_date=svl.create_date)._account_entry_move(
-                                        svl.quantity, svl.description, svl.id, svl.value
-                                    )
-                                    if svl.account_move_id:
-                                        self._cr.execute(f"update account_move set date = '{svl.create_date.date()}' where id = {svl.account_move_id.id}")  
-                                        self._cr.commit()                          
-                                    print(f"SVL ID {svl.id} a creat nota contabila")
-                                except Exception as e:
-                                    #if not not_posted:
-                                    #    import ipdb; ipdb.set_trace(context=15)                                    
-                                    not_posted = True
-                                    pass
-                    except:
-                        pass
-            else:
-                #raman noile valori de pe svl
-                pass
-        if not_posted:
-            print("Nu s-au putut posta toate notele contabile")
+                                svl.stock_move_id.with_context(force_period_date=svl.create_date)._account_entry_move(
+                                    svl.quantity, svl.description, svl.id, svl.value
+                                )
+                                #if svl.account_move_id:
+                                #    self._cr.execute(f"update account_move set date = '{svl.create_date.date()}' where id = {svl.account_move_id.id}")  
+                                #    self._cr.execute(f"update account_move_line set date = '{svl.create_date.date()}' where id = {svl.account_move_id.id}")  
