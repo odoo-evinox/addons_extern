@@ -31,7 +31,7 @@ class SearchParentMixin(models.AbstractModel):
                 for arg in args:
                     if arg[0] == "company_id":
                         new_args.append(
-                            ("company_id", arg[1], self.env.company.parent_id.id)
+                            ("company_id", arg[1], [self.env.company.parent_id.id])
                         )
                     else:
                         new_args.append(arg)
