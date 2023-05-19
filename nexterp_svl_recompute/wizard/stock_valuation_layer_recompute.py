@@ -276,11 +276,14 @@ class StockValuationLayerRecompute(models.TransientModel):
                         avg = [new_avg, avg[1] + svl.quantity]
 
                 elif (
-                        svl.stock_move_id._is_out() or 
+                        svl.stock_move_id and
                         (
-                            svl.stock_move_id._is_internal_transfer() and 
-                            svl.l10n_ro_location_dest_id.scrap_location and
-                            svl.quantity < 0
+                            svl.stock_move_id._is_out() or 
+                            (
+                                svl.stock_move_id._is_internal_transfer() and 
+                                svl.l10n_ro_location_dest_id.scrap_location and
+                                svl.quantity < 0
+                            )
                         )
                     ):
                     svl_qty = abs(svl.quantity)
@@ -300,7 +303,12 @@ class StockValuationLayerRecompute(models.TransientModel):
                                 avg[0] = 0
                         avg[1] = max(0, avg[1] - abs(svl.quantity))
 
-                elif svl.stock_move_id._is_internal_transfer() and svl.quantity < 0:
+                elif (
+                        svl.stock_move_id and
+                        (
+                            svl.stock_move_id._is_internal_transfer() and svl.quantity < 0
+                        )
+                    ):
                     svl.unit_cost = round(avg[0], 2)
                     svl.value = round(avg[0] * svl.quantity, 2)                      
 
