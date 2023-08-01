@@ -10,8 +10,14 @@ from collections import defaultdict
 fields = self.env['svl.recompute']._fields
 fields = list(fields.keys())
 defaults = self.env['svl.recompute'].default_get(fields)
-defaults.update(update_account_moves=True, update_svl_values=True, run_svl_recompute=False, date_from='2022-01-01')
+defaults.update(recompute_type='fifo_average', date_from='2022-01-01', run_svl_recompute=True, update_svl_values=True, fix_remaining_qty=True, update_account_moves=False)
 wiz = self.env['svl.recompute'].create(defaults)
+#products = self.env['product.product'].search([('type', '=', 'product'), ('id', 'not in', (294, 557, 789)), ('company_id', 'in', (False, 1))])
+#products = self.env['product.product'].search([('type', '=', 'product'), ('categ_id', '=', 37), ('id', 'not in', (294, 557, 789))])
+products = self.env['product.product'].search([('type', '=', 'product'), ('id', '=', 789)])
+wiz.product_ids = [(6, 0, products.ids)]
+wiz.buttton_do_correction()
+self._cr.commit()
 
 """
 class SVLRecomputeLocation(models.TransientModel):
@@ -37,7 +43,7 @@ class StockValuationLayerRecompute(models.TransientModel):
         selection=[('fifo_average', 'FIFO/Average'), 
         ('manufacturing', 'Manufacturing Orders')], string="Type", default="fifo_average")
     company_id = fields.Many2one('res.company', default=lambda self: self.env.company)
-    product_id = fields.Many2one('product.product', "Related product", check_company=True)
+    product_ids = fields.Many2many('product.product', string="Related products", check_company=True)
     date_from = fields.Date("Recompute Start Date")
     location_ids = fields.One2many(
         'svl.recompute.location',
@@ -47,7 +53,7 @@ class StockValuationLayerRecompute(models.TransientModel):
     update_account_moves = fields.Boolean(
         default=False
     )
-    fix_remaining_qty = fields.Boolean(
+    fix_remaining_qty = fields.Boolean('Fix Remaining Qty/Val',
         default=False
     )
     update_svl_values = fields.Boolean(
@@ -90,10 +96,10 @@ class StockValuationLayerRecompute(models.TransientModel):
 
     def _prepare_svls(self):
         #backup unit_cost and value
-        if self.product_id:
-            products = self.product_id
+        if self.product_ids:
+            products = self.product_ids
         else:
-            products = self.product_id or self.env['product.product'].search([])
+            products = self.env['product.product'].search([])
 
         locations = self.location_ids.mapped('location_id')
         domain = ['&',
@@ -111,10 +117,10 @@ class StockValuationLayerRecompute(models.TransientModel):
             svl.new_remaining_qty = svl.remaining_qty
 
     def action_start_recompute(self):
-        if self.product_id:
-            products = self.product_id
+        if self.product_ids:
+            products = self.product_ids
         else:
-            products = self.product_id or self.env['product.product'].search([])
+            products = self.env['product.product'].search([])
         locations = self.location_ids.mapped('location_id')
 
         if self.recompute_type == 'fifo_average':
@@ -129,6 +135,21 @@ class StockValuationLayerRecompute(models.TransientModel):
             self.recompute_manufacturing_orders(products)
 
         return True
+
+    def _delete_out_lcs(self, svl_loc_out):
+        #delete landed costs for svls out
+        svl_loc_out_lc = self.env['stock.valuation.layer'].search(
+            [('stock_valuation_layer_id', 'in', svl_loc_out.ids),
+            ('l10n_ro_valued_type', 'in', ('consumption', 'delivery'))]
+        )
+        if svl_loc_out_lc:
+            svl_loc_out_lc.mapped('account_move_id').button_draft()
+            svl_loc_out_lc.mapped('account_move_id').button_cancel()
+            self._cr.execute(
+                'delete from stock_landed_cost where id in (select stock_landed_cost_id from stock_valuation_layer where id in %s)', 
+                (tuple(svl_loc_out_lc.ids),)
+            )
+            self._cr.execute('delete from stock_valuation_layer where id in %s', (tuple(svl_loc_out_lc.ids),))        
 
     def _run_average(self, product, locations):
         self = self.sudo()
@@ -214,7 +235,13 @@ class StockValuationLayerRecompute(models.TransientModel):
                                 ('quantity', '<', 0.001),
                 ]
 
-        svls = list(self.env['stock.valuation.layer'].search(domain).sorted(lambda svl: svl.create_date))
+        svls = self.env['stock.valuation.layer'].search(domain).sorted(lambda svl: svl.create_date)
+
+        #delete landed costs for svls out
+        svl_loc_out = svls.filtered(lambda svl: svl.quantity < 0)
+        self._delete_out_lcs(svl_loc_out)
+
+        svls = list(svls)
         last_avg = avg[0]
         while svls:
             svl = svls[0]
@@ -338,30 +365,34 @@ class StockValuationLayerRecompute(models.TransientModel):
         date_from = fields.Datetime.to_datetime(self.date_from)
         date_domain = [('create_date', '>=', date_from)]
 
+        domain_in = date_domain + [('product_id', '=', product.id), ("l10n_ro_location_dest_id", "=", loc.id), ('quantity', '>', 0.001)]
+        svl_loc_in = self.env['stock.valuation.layer'].search(domain_in)
+
+        domain_out = date_domain + [('product_id', '=', product.id), ("l10n_ro_location_id", "=", loc.id), ('quantity', '<', 0)]
+        svl_loc_out = self.env['stock.valuation.layer'].search(domain_out)
+
+        svl_loc_in = svl_loc_in.sorted(lambda svl: svl.create_date)
+        svl_loc_out = svl_loc_out.sorted(lambda svl: svl.create_date)
+
+        #delete landed costs for svls out
+        self._delete_out_lcs(svl_loc_out)
+
         should_restart_fifo = True
         while should_restart_fifo:
             should_restart_fifo = False
 
-            domain_in = date_domain + [('product_id', '=', product.id), ("l10n_ro_location_dest_id", "=", loc.id), ('quantity', '>', 0)]
-            svl_loc_in = self.env['stock.valuation.layer'].search(domain_in)
-
-            domain_out = date_domain + [('product_id', '=', product.id), ("l10n_ro_location_id", "=", loc.id), ('quantity', '<', 0)]
-            svl_loc_out = self.env['stock.valuation.layer'].search(domain_out)
-
             quantity = abs(sum(svl_loc_out.mapped('quantity')))
-
-            svl_loc_in = svl_loc_in.sorted(lambda svl: svl.create_date)
-            svl_loc_out = svl_loc_out.sorted(lambda svl: svl.create_date)
-
             # build fifo list, [qty, unit_cost] pairs
             fifo_lst = []
             t_qty = quantity
             for svl_in in svl_loc_in:
+                value = sum([s.value for s in (svl_in + svl_in.stock_valuation_layer_ids)])
+                unit_cost = value / svl_in.quantity
                 if t_qty > svl_in.quantity:
-                    fifo_lst.append([svl_in.quantity, svl_in.unit_cost, svl_in.value, svl_in.stock_move_id, svl_in])
+                    fifo_lst.append([svl_in.quantity, unit_cost, value, svl_in.stock_move_id, svl_in])
                     t_qty -= svl_in.quantity
                 else:
-                    fifo_lst.append([t_qty, svl_in.unit_cost, svl_in.value, svl_in.stock_move_id, svl_in])
+                    fifo_lst.append([t_qty, unit_cost, value, svl_in.stock_move_id, svl_in])
                     break
             # assign unit cost to delivery svls based on fifo_lst
             print(svl_loc_out)
@@ -392,7 +423,7 @@ class StockValuationLayerRecompute(models.TransientModel):
                             if svl_qty <= fifo_qty:
                                 last_price = fifo_lst[0][1]
                                 svl_out.unit_cost = last_price
-                                svl_out.value = (-1) * svl_qty * svl_out.unit_cost
+                                svl_out.value = (-1) * svl_qty * last_price
                                 fifo_lst[0][0] = fifo_qty - svl_qty
                                 if fifo_lst[0][0] == 0:
                                     fifo_lst.pop(0)
@@ -420,7 +451,6 @@ class StockValuationLayerRecompute(models.TransientModel):
                             for i in range(len(fifo_lst)):
                                 fifo_entry = fifo_lst[i]
                                 if fifo_entry[3] in svl_out.stock_move_id.move_dest_ids:
-                                    # import ipdb; ipdb.set_trace(context=10)
                                     # fix new unit_price in fifo
                                     svl_out_uc = abs(svl_out.value / svl_out.quantity)
                                     if svl_out_uc != fifo_entry[1]:
@@ -428,26 +458,36 @@ class StockValuationLayerRecompute(models.TransientModel):
                                         fifo_entry[1] = fifo_entry[4].unit_cost = svl_out_uc
                                         fifo_entry[4].value = svl_out_uc * fifo_entry[4].quantity
                                     break
+
                         # Fix internal transfer price
                         if svl_out.l10n_ro_valued_type == "internal_transfer":
                             other_svl = svl_out.stock_move_id.stock_valuation_layer_ids.filtered(
                                 lambda svl: svl.id != svl_out.id and svl.quantity > 0
                             )
                             if other_svl:
-                                other_svl.unit_cost = svl_out.unit_cost
+                                uc = (svl_out.quantity != 0 and svl_out.value / svl_out.quantity) or 0
+                                other_svl.unit_cost = uc
                                 for o_svl in other_svl:
-                                    o_svl.value = o_svl.quantity * svl_out.unit_cost
+                                    o_svl.value = o_svl.quantity * uc
                         if should_restart_fifo:
-                            svl_ret = self.env['stock.valuation.layer'].search(
-                                [('stock_move_id', 'in', svl_out.stock_move_id.move_dest_ids.ids)], order="id asc")
+                            #svl_ret = self.env['stock.valuation.layer'].search(
+                            #    [('stock_move_id', 'in', svl_out.stock_move_id.move_dest_ids.ids)], order="id asc")
+
+                            svl_ret = (svl_loc_in + svl_loc_out).filtered(lambda svl: svl.stock_move_id in svl_out.stock_move_id.move_dest_ids)
                             if svl_ret:
                                 svl_ret = svl_ret[0]
-                                if round(abs(svl_ret.unit_cost - svl_out.unit_cost), 2) == 0:
+                                uc_svl_ret = (svl_ret.quantity != 0 and svl_ret.value / svl_ret.quantity) or 0
+                                uc_svl_out = (svl_out.quantity != 0 and svl_out.value / svl_out.quantity) or 0
+
+                                if round(abs(uc_svl_ret - uc_svl_out), 2) == 0:
                                     should_restart_fifo = False
                                 else:
-                                    svl_ret.unit_cost = svl_out.unit_cost
-                                    svl_ret.value = svl_out.unit_cost * svl_ret.quantity
+                                    uc = (svl_out.quantity != 0 and svl_out.value / svl_out.quantity) or 0                                    
+                                    svl_ret.unit_cost = uc
+                                    svl_ret.value = uc * svl_ret.quantity
                                     break
+                            else:
+                                should_restart_fifo = False
 
     def recompute_manufacturing_orders(self, products):
         # Redo productions with computed cost
@@ -485,10 +525,10 @@ class StockValuationLayerRecompute(models.TransientModel):
 
 
     def _fix_remaining_qty_value(self):
-        if self.product_id:
-            products = self.product_id
+        if self.product_ids:
+            products = self.product_ids
         else:
-            products = self.product_id or self.env['product.product'].search([])
+            products = self.env['product.product'].search([])
 
         locations = self.location_ids.mapped('location_id')
         if len(products) == 1:
@@ -498,17 +538,24 @@ class StockValuationLayerRecompute(models.TransientModel):
         self.env.cr.commit()        
 
         # Fix remaining qty
-        for quant in self.env['stock.quant'].search(
-                [('product_id', 'in', products.ids), ('location_id', 'in', locations.ids)]
-            ):
-            if quant.location_id.usage == "internal":
+        for location in locations.filtered(lambda l: l.usage == 'internal'):
+            plds = self.env['stock.quant'].read_group(
+                        domain=[('product_id', 'in', products.ids), ('location_id', '=', location.id)],
+                        fields=['product_id', 'quantity:sum'],
+                        groupby=['product_id', 'location_id']
+                    )
+
+            for pld in plds:
+                product = self.env['product.product'].browse(pld['product_id'][0])            
+                qty = pld['quantity']
                 svls = self.env['stock.valuation.layer'].search(
-                    [("product_id", "=", quant.product_id.id),
-                        ("l10n_ro_location_dest_id", "=", quant.location_id.id),
+                    [("product_id", "=", product.id),
+                        ("l10n_ro_location_dest_id", "=", location.id),
                         ("quantity", ">", 0)])
-                qty = quant.quantity
+                qty = pld['quantity']
                 for svl in svls.sorted("create_date", reverse=True):
-                    unit_cost = svl.unit_cost or quant.product_id.with_company(self.company_id).standard_price                        
+                    unit_cost = svl.value / svl.quantity if svl.quantity else 0
+                    unit_cost = unit_cost or product.with_company(self.company_id).standard_price                        
                     if qty > 0:
                         added_cost = 0
                         linked_svl = self.env['stock.valuation.layer'].search([('stock_valuation_layer_id', '=', svl.id)])
@@ -529,10 +576,10 @@ class StockValuationLayerRecompute(models.TransientModel):
 
 
     def _finalize_svls(self):
-        if self.product_id:
-            products = self.product_id
+        if self.product_ids:
+            products = self.product_ids
         else:
-            products = self.product_id or self.env['product.product'].search([])
+            products = self.env['product.product'].search([])
 
         locations = self.location_ids.mapped('location_id')
         date_from = fields.Datetime.to_datetime(self.date_from)
